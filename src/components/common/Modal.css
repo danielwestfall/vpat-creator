@@ -1,0 +1,146 @@
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  animation: modal-overlay-fade-in 0.2s ease-out;
+}
+
+@keyframes modal-overlay-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modal-content {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: var(--color-background);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: var(--spacing-lg);
+  z-index: 1001;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: modal-content-slide-in 0.2s ease-out;
+}
+
+@keyframes modal-content-slide-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -48%);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+}
+
+.modal-content:focus {
+  outline: none;
+}
+
+/* Sizes */
+.modal-content--sm {
+  width: 90%;
+  max-width: 400px;
+}
+
+.modal-content--md {
+  width: 90%;
+  max-width: 600px;
+}
+
+.modal-content--lg {
+  width: 90%;
+  max-width: 800px;
+}
+
+.modal-content--xl {
+  width: 90%;
+  max-width: 1200px;
+}
+
+.modal-header {
+  margin-bottom: var(--spacing-lg);
+}
+
+.modal-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0 0 var(--spacing-xs) 0;
+}
+
+.modal-description {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.modal-body {
+  color: var(--color-text);
+}
+
+.modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-lg);
+  padding-top: var(--spacing-lg);
+  border-top: 1px solid var(--color-border);
+}
+
+.modal-close {
+  position: absolute;
+  top: var(--spacing-md);
+  right: var(--spacing-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: var(--border-radius);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+}
+
+.modal-close:hover {
+  background-color: var(--color-secondary);
+  color: var(--color-text);
+}
+
+.modal-close:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Scrollbar styling for modal content */
+.modal-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.modal-content::-webkit-scrollbar-track {
+  background: var(--color-secondary);
+  border-radius: var(--border-radius);
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: var(--border-radius);
+}
+
+.modal-content::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-muted);
+}

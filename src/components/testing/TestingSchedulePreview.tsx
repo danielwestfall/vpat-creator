@@ -1,0 +1,222 @@
+import React from 'react';
+import { testingScheduleService } from '../../services/testing-schedule-service';
+import { Button } from '../common';
+import './TestingSchedulePreview.css';
+
+export const TestingSchedulePreview: React.FC = () => {
+  const [activeTab, setActiveTab] = React.useState<'sc' | 'component'>('sc');
+  const [scSchedule, setScSchedule] = React.useState<ReturnType<
+    typeof testingScheduleService.generateSCSchedule
+  > | null>(null);
+  const [componentSchedule, setComponentSchedule] = React.useState<ReturnType<
+    typeof testingScheduleService.generateComponentSchedule
+  > | null>(null);
+  const [loading, setLoading] = React.useState(false);
+
+  React.useEffect(() => {
+    generateSchedules();
+  }, []);
+
+  const generateSchedules = () => {
+    setLoading(true);
+    try {
+      const sc = testingScheduleService.generateSCSchedule({
+        levels: ['A', 'AA'],
+        includeAdvisory: true,
+        includeFailures: true,
+      });
+      setScSchedule(sc);
+
+      const comp = testingScheduleService.generateComponentSchedule({
+        levels: ['A', 'AA'],
+        includeAdvisory: true,
+        includeFailures: true,
+      });
+      setComponentSchedule(comp);
+    } catch (error) {
+      console.error('Error generating schedules:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const downloadMarkdown = (type: 'sc' | 'component') => {
+    if (type === 'sc' && scSchedule) {
+      const markdown = testingScheduleService.exportSCScheduleAsMarkdown(scSchedule);
+      downloadFile(markdown, 'wcag-testing-schedule-sc.md', 'text/markdown');
+    } else if (type === 'component' && componentSchedule) {
+      const markdown =
+        testingScheduleService.exportComponentScheduleAsMarkdown(componentSchedule);
+      downloadFile(markdown, 'wcag-testing-schedule-component.md', 'text/markdown');
+    }
+  };
+
+  const downloadJSON = (type: 'sc' | 'component') => {
+    if (type === 'sc' && scSchedule) {
+      const json = JSON.stringify(scSchedule, null, 2);
+      downloadFile(json, 'wcag-testing-schedule-sc.json', 'application/json');
+    } else if (type === 'component' && componentSchedule) {
+      const json = JSON.stringify(componentSchedule, null, 2);
+      downloadFile(json, 'wcag-testing-schedule-component.json', 'application/json');
+    }
+  };
+
+  const downloadFile = (content: string, filename: string, mimeType: string) => {
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  if (loading || !scSchedule || !componentSchedule) {
+    return (
+      <div className="schedule-preview-loading">
+        <p>Loading testing schedules...</p>
+      </div>
+    );
+  }
+
+  const scStats = testingScheduleService.getScheduleStats(scSchedule);
+  const componentStats = testingScheduleService.getComponentStats(componentSchedule);
+
+  return (
+    <div className="schedule-preview">
+      <header className="schedule-preview-header">
+        <h1>WCAG 2.2 Testing Schedules</h1>
+        <p>Two approaches to organize your accessibility testing workflow</p>
+      </header>
+
+      <div className="schedule-tabs">
+        <button
+          className={`schedule-tab ${activeTab === 'sc' ? 'active' : ''}`}
+          onClick={() => setActiveTab('sc')}
+        >
+          Success Criteria Based
+        </button>
+        <button
+          className={`schedule-tab ${activeTab === 'component' ? 'active' : ''}`}
+          onClick={() => setActiveTab('component')}
+        >
+          Component/Technique Based
+        </button>
+      </div>
+
+      {activeTab === 'sc' && (
+        <div className="schedule-content">
+          <div className="schedule-stats">
+            <h2>Success Criteria Schedule Stats</h2>
+            <div className="stats-grid">
+              <div className="stat-card">
+                <div className="stat-value">{scStats.totalSC}</div>
+                <div className="stat-label">Success Criteria</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-value">{scStats.totalTechniques}</div>
+                <div className="stat-label">Techniques</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-value">{scStats.totalFailures}</div>
+                <div className="stat-label">Failures to Check</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-value">{scStats.estimatedTimeHours}h</div>
+                <div className="stat-label">Estimated Time</div>
+              </div>
+            </div>
+
+            <div className="level-breakdown">
+              <h3>By Conformance Level</h3>
+              <div className="level-stats">
+                <span className="level-stat">Level A: {scStats.byLevel.A}</span>
+                <span className="level-stat">Level AA: {scStats.byLevel.AA}</span>
+                <span className="level-stat">Level AAA: {scStats.byLevel.AAA}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="schedule-actions">
+            <Button onClick={() => downloadMarkdown('sc')} variant="primary">
+              Download as Markdown
+            </Button>
+            <Button onClick={() => downloadJSON('sc')} variant="secondary">
+              Download as JSON
+            </Button>
+          </div>
+
+          <div className="schedule-preview-list">
+            <h3>Sample Items (first 5)</h3>
+            {scSchedule.slice(0, 5).map((item) => (
+              <div key={item.id} className="schedule-item">
+                <h4>
+                  {item.scNumber} {item.scTitle}
+                  <span className="level-badge level-{item.scLevel.toLowerCase()}">
+                    Level {item.scLevel}
+                  </span>
+                </h4>
+                <p className="guideline">{item.guideline}</p>
+                <p className="description">{item.description.substring(0, 200)}...</p>
+                <div className="item-meta">
+                  <span>⏱️ {item.estimatedTime} minutes</span>
+                  <span>🔧 {item.sufficientTechniques.length} techniques</span>
+                  <span>⚠️ {item.failures.length} failures</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'component' && (
+        <div className="schedule-content">
+          <div className="schedule-stats">
+            <h2>Component Schedule Stats</h2>
+            <div className="stats-grid">
+              <div className="stat-card">
+                <div className="stat-value">{componentStats.totalCategories}</div>
+                <div className="stat-label">Categories</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-value">{componentStats.totalComponents}</div>
+                <div className="stat-label">Components</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-value">{componentStats.totalTechniques}</div>
+                <div className="stat-label">Techniques</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-value">{componentStats.estimatedTimeHours}h</div>
+                <div className="stat-label">Estimated Time</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="schedule-actions">
+            <Button onClick={() => downloadMarkdown('component')} variant="primary">
+              Download as Markdown
+            </Button>
+            <Button onClick={() => downloadJSON('component')} variant="secondary">
+              Download as JSON
+            </Button>
+          </div>
+
+          <div className="component-categories">
+            <h3>Categories</h3>
+            {componentSchedule.map((category) => (
+              <div key={category.category} className="category-card">
+                <h4>{category.category}</h4>
+                <p>{category.description}</p>
+                <div className="category-meta">
+                  <span>🧩 {category.components.length} components</span>
+                  <span>⏱️ {Math.round(category.totalTime / 60)}h</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};

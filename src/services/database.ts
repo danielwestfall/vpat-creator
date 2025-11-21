@@ -1,4 +1,5 @@
 import Dexie, { type Table } from 'dexie';
+import { createLogger } from '../utils/logger';
 import type {
   Project,
   Component,
@@ -6,6 +7,8 @@ import type {
   Screenshot,
   WCAGCustomization,
 } from '../models/types';
+
+const logger = createLogger('database');
 
 // ============================================================================
 // DATABASE SCHEMA
@@ -46,17 +49,17 @@ export const db = new VPATDatabase();
 export async function initializeDatabase() {
   try {
     await db.open();
-    console.log('Database opened successfully');
+    logger.info('Database opened successfully');
     
     // Check if this is first run
     const projectCount = await db.projects.count();
     if (projectCount === 0) {
-      console.log('First run detected - database is ready');
+      logger.info('First run detected - database is ready');
     }
     
     return true;
   } catch (error) {
-    console.error('Failed to initialize database:', error);
+    logger.error('Failed to initialize database:', error);
     return false;
   }
 }
@@ -71,10 +74,10 @@ export async function clearDatabase() {
     await db.testResults.clear();
     await db.screenshots.clear();
     await db.wcagCustomizations.clear();
-    console.log('Database cleared successfully');
+    logger.info('Database cleared successfully');
     return true;
   } catch (error) {
-    console.error('Failed to clear database:', error);
+    logger.error('Failed to clear database:', error);
     return false;
   }
 }
@@ -95,7 +98,7 @@ export async function exportDatabaseToJSON() {
     };
     return data;
   } catch (error) {
-    console.error('Failed to export database:', error);
+    logger.error('Failed to export database:', error);
     throw error;
   }
 }
@@ -139,10 +142,10 @@ export async function importDatabaseFromJSON(data: unknown) {
       await db.wcagCustomizations.bulkAdd(backupData.wcagCustomizations);
     }
 
-    console.log('Database imported successfully');
+    logger.info('Database imported successfully');
     return true;
   } catch (error) {
-    console.error('Failed to import database:', error);
+    logger.error('Failed to import database:', error);
     throw error;
   }
 }
@@ -161,7 +164,180 @@ export async function getDatabaseStats() {
     };
     return stats;
   } catch (error) {
-    console.error('Failed to get database stats:', error);
+    logger.error('Failed to get database stats:', error);
+    throw error;
+  }
+}
+
+// ============================================================================
+// SCREENSHOT OPERATIONS
+// ============================================================================
+
+/**
+ * Add a screenshot
+ */
+export async function addScreenshot(screenshot: Screenshot): Promise<string> {
+  try {
+    const id = await db.screenshots.add(screenshot);
+    logger.info('Screenshot added:', id);
+    return id;
+  } catch (error) {
+    logger.error('Failed to add screenshot:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get screenshots for a test result
+ */
+export async function getScreenshotsByTestResult(testResultId: string): Promise<Screenshot[]> {
+  try {
+    const screenshots = await db.screenshots
+      .where('testResultId')
+      .equals(testResultId)
+      .toArray();
+    return screenshots;
+  } catch (error) {
+    logger.error('Failed to get screenshots:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get screenshots for a component
+ */
+export async function getScreenshotsByComponent(componentId: string): Promise<Screenshot[]> {
+  try {
+    const screenshots = await db.screenshots
+      .where('componentId')
+      .equals(componentId)
+      .toArray();
+    return screenshots;
+  } catch (error) {
+    logger.error('Failed to get screenshots:', error);
+    throw error;
+  }
+}
+
+/**
+ * Update screenshot caption
+ */
+export async function updateScreenshotCaption(id: string, caption: string): Promise<void> {
+  try {
+    await db.screenshots.update(id, { caption });
+    logger.info('Screenshot caption updated:', id);
+  } catch (error) {
+    logger.error('Failed to update screenshot caption:', error);
+    throw error;
+  }
+}
+
+/**
+ * Delete a screenshot
+ */
+export async function deleteScreenshot(id: string): Promise<void> {
+  try {
+    await db.screenshots.delete(id);
+    logger.info('Screenshot deleted:', id);
+  } catch (error) {
+    logger.error('Failed to delete screenshot:', error);
+    throw error;
+  }
+}
+
+// ============================================================================
+// TEST RESULT OPERATIONS
+// ============================================================================
+
+/**
+ * Save or update a test result
+ */
+export async function saveTestResult(result: TestResult): Promise<string> {
+  try {
+    // Use put to update if exists or add if new
+    const id = await db.testResults.put(result);
+    logger.info('Test result saved:', id);
+    return id;
+  } catch (error) {
+    logger.error('Failed to save test result:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get all test results for the current project (assuming single project for now or filtering later)
+ * For this implementation, we'll just get all results as we're working with a single active audit context
+ */
+export async function getAllTestResults(): Promise<TestResult[]> {
+  try {
+    return await db.testResults.toArray();
+  } catch (error) {
+    logger.error('Failed to get test results:', error);
+    throw error;
+  }
+}
+
+/**
+ * Bulk save test results (useful for import)
+ */
+export async function bulkSaveTestResults(results: TestResult[]): Promise<void> {
+  try {
+    await db.testResults.bulkPut(results);
+    logger.info(`Saved ${results.length} test results`);
+  } catch (error) {
+    logger.error('Failed to bulk save test results:', error);
+    throw error;
+  }
+}
+
+// ============================================================================
+// PROJECT / SCOPE OPERATIONS
+// ============================================================================
+
+/**
+ * Save the current project (audit scope)
+ * We'll use a fixed ID 'current-audit' for the active session to make it easy to restore
+ */
+export async function saveCurrentProject(project: Project): Promise<string> {
+  try {
+    // Ensure we use a consistent ID for the "active" project to allow resumption
+    // In a multi-project app, this would be dynamic
+    const projectToSave = { ...project, id: 'current-audit' };
+    const id = await db.projects.put(projectToSave);
+    logger.info('Project saved:', id);
+    return id;
+  } catch (error) {
+    logger.error('Failed to save project:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get the current active project
+ */
+export async function getCurrentProject(): Promise<Project | undefined> {
+  try {
+    return await db.projects.get('current-audit');
+  } catch (error) {
+    logger.error('Failed to get current project:', error);
+    throw error;
+  }
+}
+
+/**
+ * Clear the current audit data (start over)
+ */
+export async function clearCurrentAudit(): Promise<void> {
+  try {
+    await db.transaction('rw', db.projects, db.testResults, db.screenshots, async () => {
+      await db.projects.delete('current-audit');
+      await db.testResults.clear(); // Clear all results for now as we're single-session
+      // We might want to keep screenshots or handle them more carefully in a real multi-project app
+      await db.screenshots.clear(); 
+    });
+    logger.info('Current audit cleared');
+  } catch (error) {
+    logger.error('Failed to clear audit:', error);
     throw error;
   }
 }

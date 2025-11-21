@@ -1,0 +1,186 @@
+.pdf-export-dialog__overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+}
+
+.pdf-export-dialog__content {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: var(--color-bg-primary, #ffffff);
+  border-radius: 8px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  max-width: 500px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  z-index: 1001;
+}
+
+.pdf-export-dialog__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--color-border, #e5e7eb);
+}
+
+.pdf-export-dialog__title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0;
+  color: var(--color-text-primary, #111827);
+}
+
+.pdf-export-dialog__close {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--color-text-secondary, #6b7280);
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.pdf-export-dialog__close:hover {
+  background-color: var(--color-bg-secondary, #f3f4f6);
+}
+
+.pdf-export-dialog__close:focus-visible {
+  outline: 2px solid var(--color-primary, #6366f1);
+  outline-offset: 2px;
+}
+
+.pdf-export-dialog__body {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.pdf-export-option {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.pdf-export-option__label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text-primary, #111827);
+}
+
+.pdf-export-option__select {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-border, #d1d5db);
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-family: inherit;
+  background-color: var(--color-bg-primary, #ffffff);
+  color: var(--color-text-primary, #111827);
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.pdf-export-option__select:hover {
+  border-color: var(--color-primary, #6366f1);
+}
+
+.pdf-export-option__select:focus {
+  outline: 2px solid var(--color-primary, #6366f1);
+  outline-offset: 0;
+  border-color: var(--color-primary, #6366f1);
+}
+
+.pdf-export-option__checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--color-text-primary, #111827);
+  cursor: pointer;
+}
+
+.pdf-export-option__checkbox {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.pdf-export-option__checkbox:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.pdf-export-option__badge {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background-color: var(--color-primary-light, #eef2ff);
+  color: var(--color-primary, #6366f1);
+  border-radius: 12px;
+  margin-left: 0.5rem;
+}
+
+.pdf-export-info {
+  padding: 1rem;
+  background-color: var(--color-bg-secondary, #f9fafb);
+  border-radius: 6px;
+  border: 1px solid var(--color-border, #e5e7eb);
+}
+
+.pdf-export-info__text {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary, #6b7280);
+  margin: 0.5rem 0;
+}
+
+.pdf-export-info__text:first-child {
+  margin-top: 0;
+}
+
+.pdf-export-info__text:last-child {
+  margin-bottom: 0;
+}
+
+.pdf-export-dialog__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  border-top: 1px solid var(--color-border, #e5e7eb);
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .pdf-export-dialog__content {
+    width: 95%;
+    max-height: 95vh;
+  }
+
+  .pdf-export-dialog__header,
+  .pdf-export-dialog__body,
+  .pdf-export-dialog__footer {
+    padding: 1rem;
+  }
+
+  .pdf-export-dialog__footer {
+    flex-direction: column-reverse;
+  }
+
+  .pdf-export-dialog__footer button {
+    width: 100%;
+  }
+}

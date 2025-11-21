@@ -1,0 +1,90 @@
+.custom-criteria-container {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.criteria-content {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 3rem;
+}
+
+.criteria-form {
+  background: var(--color-bg-secondary);
+  padding: 1.5rem;
+  border-radius: 8px;
+  height: fit-content;
+}
+
+.criteria-textarea {
+  padding: 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  resize: vertical;
+  font-family: inherit;
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+.input-wrapper {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1rem;
+}
+
+.input-wrapper label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.list-container {
+  display: grid;
+  gap: 1rem;
+}
+
+.criterion-card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.criterion-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.criterion-num {
+  font-weight: bold;
+  color: var(--color-text-secondary);
+}
+
+.level-badge {
+  font-size: 0.75rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 12px;
+  font-weight: bold;
+}
+
+.level-A { background: #fee2e2; color: #991b1b; }
+.level-AA { background: #fef3c7; color: #92400e; }
+.level-AAA { background: #d1fae5; color: #065f46; }
+
+.delete-btn {
+  margin-left: auto;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  line-height: 1;
+}
+
+.delete-btn:hover {
+  color: #ef4444;
+}

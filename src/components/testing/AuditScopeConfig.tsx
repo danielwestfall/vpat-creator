@@ -1,5 +1,7 @@
 import React from 'react';
 import { Button, Input, Checkbox } from '../common';
+import { toast } from '../../store/toast-store';
+import { auditScopeSchema } from '../../utils/validators';
 import type { ConformanceLevel } from '../../models/types';
 import './AuditScopeConfig.css';
 
@@ -12,6 +14,7 @@ export interface AuditScope {
   includeSection508: boolean;
   testingTools: string[];
   evaluationMethods: string[];
+  customColumns: string[];
 }
 
 interface AuditScopeConfigProps {
@@ -29,6 +32,8 @@ export const AuditScopeConfig: React.FC<AuditScopeConfigProps> = ({ onScopeConfi
   const [newTool, setNewTool] = React.useState('');
   const [evaluationMethods, setEvaluationMethods] = React.useState<string[]>([]);
   const [newMethod, setNewMethod] = React.useState('');
+  const [customColumns, setCustomColumns] = React.useState<string[]>([]);
+  const [newColumn, setNewColumn] = React.useState('');
 
   const toggleLevel = (level: ConformanceLevel) => {
     setSelectedLevels((prev) => {
@@ -64,18 +69,19 @@ export const AuditScopeConfig: React.FC<AuditScopeConfigProps> = ({ onScopeConfi
     setEvaluationMethods((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const addCustomColumn = () => {
+    if (newColumn.trim()) {
+      setCustomColumns((prev) => [...prev, newColumn.trim()]);
+      setNewColumn('');
+    }
+  };
+
+  const removeCustomColumn = (index: number) => {
+    setCustomColumns((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const handleStartAudit = () => {
-    if (!pageTitle.trim()) {
-      alert('Please enter a page or component name');
-      return;
-    }
-
-    if (selectedLevels.length === 0) {
-      alert('Please select at least one conformance level');
-      return;
-    }
-
-    onScopeConfirmed({
+    const scopeData = {
       pageTitle: pageTitle.trim(),
       pageUrl: pageUrl.trim(),
       wcagVersion,
@@ -84,7 +90,20 @@ export const AuditScopeConfig: React.FC<AuditScopeConfigProps> = ({ onScopeConfi
       includeSection508,
       testingTools,
       evaluationMethods,
-    });
+      customColumns,
+    };
+
+    // Validate using Zod schema
+    const result = auditScopeSchema.safeParse(scopeData);
+
+    if (!result.success) {
+      // Show first validation error
+      const firstError = result.error.issues[0];
+      toast.error('Validation Error', firstError.message);
+      return;
+    }
+
+    onScopeConfirmed(scopeData);
   };
 
   return (
@@ -251,6 +270,47 @@ export const AuditScopeConfig: React.FC<AuditScopeConfigProps> = ({ onScopeConfi
                       onClick={() => removeTestingTool(index)}
                       className="remove-button"
                       aria-label={`Remove ${tool}`}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+
+          <section className="scope-section">
+            <h2>Custom Report Columns</h2>
+            <p className="section-description">
+              Add extra columns to your VPAT report (e.g., "Internal Ticket", "Remediation Date")
+            </p>
+            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+              <Input
+                value={newColumn}
+                onChange={(e) => setNewColumn(e.target.value)}
+                placeholder="e.g., Ticket Number"
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    addCustomColumn();
+                  }
+                }}
+                fullWidth
+              />
+              <Button onClick={addCustomColumn} variant="secondary">
+                Add
+              </Button>
+            </div>
+            {customColumns.length > 0 && (
+              <div className="tool-list">
+                {customColumns.map((col, index) => (
+                  <div key={index} className="tool-item">
+                    <span>{col}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeCustomColumn(index)}
+                      className="remove-button"
+                      aria-label={`Remove ${col}`}
                     >
                       ✕
                     </button>

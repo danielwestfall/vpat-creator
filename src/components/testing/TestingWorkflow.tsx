@@ -4,11 +4,27 @@ import { standardsMappingService } from '../../services/standards-mapping-servic
 import { Button, Input, Select, Checkbox } from '../common';
 import { AuditScopeConfig, type AuditScope } from './AuditScopeConfig';
 import { ComponentInfo } from './ComponentInfo';
-import type { TestingScheduleItem } from '../../utils/testing-schedule-generator';
-import type { ConformanceStatus } from '../../models/types';
+import { ScreenshotManager } from './ScreenshotManager';
+import { PDFExportDialog } from '../export/PDFExportDialog';
+import { BugReportGenerator } from '../export/BugReportGenerator';
+import { 
+  addScreenshot, 
+  getScreenshotsByTestResult, 
+  updateScreenshotCaption, 
+  deleteScreenshot,
+  saveTestResult,
+  getAllTestResults,
+  saveCurrentProject,
+  getCurrentProject,
+  clearCurrentAudit
+} from '../../services/database';
+import { ComponentTestingView } from './ComponentTestingView';
+import type { TestingScheduleItem, ComponentCategory } from '../../utils/testing-schedule-generator';
+import type { ConformanceStatus, Screenshot, Project, Component, TestResult as DBTestResult } from '../../models/types';
 import './TestingWorkflow.css';
 
-interface TestResult {
+// UI-level test result (used in component state)
+interface UITestResult {
   scId: string;
   status: ConformanceStatus | 'Not Tested';
   notes: string;
@@ -20,7 +36,42 @@ interface TestResult {
   toolsUsed: string;
   screenshots: string[];
   needsRecheck?: boolean; // For marking completed audits that need re-verification
+  customColumnValues?: Record<string, string>;
 }
+
+// Helper functions to convert between UI and DB test results
+const uiResultToDbResult = (uiResult: UITestResult, scLevel: string): DBTestResult => ({
+  id: uiResult.scId,
+  successCriterionId: uiResult.scId,
+  level: scLevel as 'A' | 'AA' | 'AAA',
+  conformance: uiResult.status === 'Not Tested' ? 'Not Applicable' : uiResult.status,
+  observations: uiResult.notes,
+  barriers: [],
+  testingMethod: {
+    type: 'Manual',
+    tools: uiResult.toolsUsed ? [uiResult.toolsUsed] : [],
+  },
+  customNotes: uiResult.notes,
+  customColumnValues: uiResult.customColumnValues,
+  testedBy: uiResult.testedBy,
+  testedDate: uiResult.testedDate,
+  screenshotIds: uiResult.screenshots,
+});
+
+const dbResultToUiResult = (dbResult: DBTestResult): UITestResult => ({
+  scId: dbResult.successCriterionId,
+  status: dbResult.conformance as ConformanceStatus | 'Not Tested',
+  notes: dbResult.customNotes || dbResult.observations,
+  testedBy: dbResult.testedBy || 'User',
+  testedDate: dbResult.testedDate || new Date(),
+  techniquesUsed: [],
+  failuresFound: [],
+  customTechniques: [],
+  toolsUsed: dbResult.testingMethod.tools?.join(', ') || '',
+  screenshots: dbResult.screenshotIds || [],
+  needsRecheck: false,
+  customColumnValues: dbResult.customColumnValues,
+});
 
 type ScheduleView = 'sc-based' | 'component-based';
 
@@ -28,13 +79,14 @@ export const TestingWorkflow: React.FC = () => {
   const [auditScope, setAuditScope] = React.useState<AuditScope | null>(null);
   const [schedule, setSchedule] = React.useState<TestingScheduleItem[]>([]);
   const [currentIndex, setCurrentIndex] = React.useState(0);
-  const [results, setResults] = React.useState<Map<string, TestResult>>(new Map());
+  const [results, setResults] = React.useState<Map<string, UITestResult>>(new Map());
   const [notes, setNotes] = React.useState('');
   const [status, setStatus] = React.useState<ConformanceStatus | 'Not Tested'>('Not Tested');
   const [selectedTechniques, setSelectedTechniques] = React.useState<string[]>([]);
   const [selectedFailures, setSelectedFailures] = React.useState<string[]>([]);
   const [customTechniques, setCustomTechniques] = React.useState<Array<{ description: string; checked: boolean }>>([]);
   const [toolsUsed, setToolsUsed] = React.useState('');
+  const [customColumnValues, setCustomColumnValues] = React.useState<Record<string, string>>({});
   const [showSummary, setShowSummary] = React.useState(false);
   const [scheduleView, setScheduleView] = React.useState<ScheduleView>('sc-based');
   const [isCompletedAudit, setIsCompletedAudit] = React.useState(false);
@@ -42,12 +94,66 @@ export const TestingWorkflow: React.FC = () => {
   const [selectedComponentType, setSelectedComponentType] = React.useState<string>('');
   const [showComponentInfo, setShowComponentInfo] = React.useState(false);
 
-  // Store both schedules
-  const [componentSchedule, setComponentSchedule] = React.useState<any[]>([]);
-  const [scSchedule, setSCSchedule] = React.useState<TestingScheduleItem[]>([]);
+  // Phase 6: Screenshot Management
+  const [screenshots, setScreenshots] = React.useState<Screenshot[]>([]);
+  const [showPDFDialog, setShowPDFDialog] = React.useState(false);
+  const [showBugDialog, setShowBugDialog] = React.useState(false);
 
-  const handleScopeConfirmed = (scope: AuditScope) => {
+  // Store both schedules
+  const [componentSchedule, setComponentSchedule] = React.useState<ComponentCategory[]>([]);
+  const [scSchedule, setSCSchedule] = React.useState<TestingScheduleItem[]>([]);
+  const [scLookup, setScLookup] = React.useState<Map<string, string>>(new Map());
+  const [isLoading, setIsLoading] = React.useState(true);
+
+  // Load saved state on mount
+  React.useEffect(() => {
+    const loadSavedState = async () => {
+      try {
+        setIsLoading(true);
+        
+        // 1. Try to load saved project/scope
+        const savedProject = await getCurrentProject();
+        
+        if (savedProject) {
+          // We need to regenerate the schedule to match the saved scope
+          // Since we don't have the exact scope config saved in the Project model (it's a bit lossy),
+          // we might need to ask the user to confirm scope if it's missing, OR we update Project model to store it.
+          // A simpler approach for now: If we have saved results, we probably have a scope.
+          
+          // Let's check localStorage for the exact scope config to be safe
+          const storedScope = localStorage.getItem('vpat_current_scope');
+          if (storedScope) {
+             const parsedScope = JSON.parse(storedScope);
+             handleScopeConfirmed(parsedScope, false); // false = don't save again, just load
+          }
+          
+          // 2. Load saved test results
+          const savedResults = await getAllTestResults();
+          if (savedResults.length > 0) {
+            const resultsMap = new Map<string, UITestResult>();
+            savedResults.forEach(r => {
+              // Convert DB result to UI result
+              resultsMap.set(r.successCriterionId, dbResultToUiResult(r));
+            });
+            setResults(resultsMap);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load saved state:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadSavedState();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleScopeConfirmed = React.useCallback(async (scope: AuditScope, saveToDb = true) => {
     setAuditScope(scope);
+    
+    // Save scope to localStorage for easy recovery
+    localStorage.setItem('vpat_current_scope', JSON.stringify(scope));
     
     // Generate both schedules based on selected levels
     const scSched = testingScheduleService.generateSCSchedule({
@@ -58,17 +164,81 @@ export const TestingWorkflow: React.FC = () => {
     setSCSchedule(scSched);
     setSchedule(scSched); // Start with SC-based view
     
-    // Generate component schedule (for future use)
+    // Create SC Lookup Map (Number -> ID)
+    const lookup = new Map<string, string>();
+    scSched.forEach(item => {
+      lookup.set(item.scNumber, item.id);
+    });
+    setScLookup(lookup);
+    
+    // Generate component schedule
     const componentSched = testingScheduleService.generateComponentSchedule({
       levels: scope.conformanceLevels,
       includeAdvisory: false,
       includeFailures: true,
     });
     setComponentSchedule(componentSched);
+
+    if (saveToDb) {
+      // Create a project entry in DB to represent this audit
+      // We need to pass the scope to prepareProjectData, but it's defined outside
+      // Let's move prepareProjectData logic here or pass it
+      // For now, we can just use the scope object we have since prepareProjectData relies on state that might not be set yet
+      
+      const project: Project = {
+        id: 'current-audit',
+        name: scope.pageTitle,
+        description: scope.pageUrl || '',
+        targetConformanceLevel: scope.conformanceLevels[0] || 'AA',
+        status: 'in-progress',
+        createdAt: new Date(),
+        modifiedAt: new Date(),
+        testingEnvironment: {
+          browsers: [{ name: 'Chrome', version: 'Latest' }],
+          assistiveTech: [{ name: 'NVDA', version: 'Latest', type: 'Screen Reader' }],
+          operatingSystems: [{ name: 'Windows', version: '11' }],
+          devices: [{ type: 'Desktop', name: 'PC' }]
+        },
+        vpatConfig: {
+          tone: 'formal',
+          customColumns: (scope.customColumns || []).map((col, index) => ({
+            id: `col-${index}`,
+            name: col,
+            description: '',
+            order: index
+          })),
+          additionalPages: [],
+          styleGuide: {},
+          includeExecutiveSummary: true,
+          includeRoadmap: false,
+          productName: scope.pageTitle,
+          productVersion: '1.0',
+          reportDate: new Date(),
+        },
+        components: [],
+        testingMode: 'by-criterion',
+      };
+      
+      await saveCurrentProject(project);
+    }
+  }, []);
+
+  const handleClearAudit = async () => {
+    if (window.confirm('Are you sure you want to clear the current audit? This will delete all progress and cannot be undone.')) {
+      await clearCurrentAudit();
+      localStorage.removeItem('vpat_current_scope');
+      setAuditScope(null);
+      setResults(new Map());
+      setSchedule([]);
+      setCurrentIndex(0);
+    }
   };
 
   // Show scope config if not set yet
   if (!auditScope) {
+    if (isLoading) {
+      return <div className="workflow-loading">Loading saved audit...</div>;
+    }
     return <AuditScopeConfig onScopeConfirmed={handleScopeConfirmed} />;
   }
 
@@ -89,7 +259,7 @@ export const TestingWorkflow: React.FC = () => {
 
   const handleUpdateAuditDate = () => {
     // Update all test dates to the new audit date
-    const updatedResults = new Map<string, TestResult>();
+    const updatedResults = new Map<string, UITestResult>();
     const newDate = new Date(auditDate);
     
     results.forEach((result, key) => {
@@ -108,19 +278,45 @@ export const TestingWorkflow: React.FC = () => {
   const toggleScheduleView = () => {
     if (scheduleView === 'sc-based') {
       // Switch to component-based view
-      alert('🚧 Component-based view coming soon! This will let you test by page component (forms, navigation, images, etc.) instead of by Success Criteria. Test results will sync between both views.');
-      // TODO: Implement full component-based testing interface
-      // setScheduleView('component-based');
+      setScheduleView('component-based');
     } else {
       setScheduleView('sc-based');
       setSchedule(scSchedule);
     }
   };
 
+  const handleComponentResultUpdate = (scId: string, status: ConformanceStatus, notes: string) => {
+    const existing = results.get(scId);
+    
+    const newResult: UITestResult = {
+      scId,
+      status,
+      notes,
+      testedBy: existing?.testedBy || 'User',
+      testedDate: new Date(),
+      techniquesUsed: existing?.techniquesUsed || [],
+      failuresFound: existing?.failuresFound || [],
+      customTechniques: existing?.customTechniques || [],
+      toolsUsed: existing?.toolsUsed || '',
+      screenshots: existing?.screenshots || [],
+      needsRecheck: false,
+      customColumnValues: existing?.customColumnValues || {},
+    };
+
+    setResults(new Map(results.set(scId, newResult)));
+    
+    // Auto-save individual result - convert to DB format
+    const sc = schedule.find(s => s.id === scId);
+    if (sc) {
+      const dbResult = uiResultToDbResult(newResult, sc.scLevel);
+      saveTestResult(dbResult).catch(err => console.error('Failed to auto-save result:', err));
+    }
+  };
+
   const handleSaveResult = () => {
     if (!currentSC) return;
 
-    const result: TestResult = {
+    const result: UITestResult = {
       scId: currentSC.id,
       status,
       notes,
@@ -132,9 +328,14 @@ export const TestingWorkflow: React.FC = () => {
       toolsUsed,
       screenshots: [], // TODO: Add screenshot upload
       needsRecheck: false,
+      customColumnValues,
     };
 
     setResults(new Map(results.set(currentSC.id, result)));
+
+    // Auto-save result - convert to DB format
+    const dbResult = uiResultToDbResult(result, currentSC.scLevel);
+    saveTestResult(dbResult).catch(err => console.error('Failed to auto-save result:', err));
 
     // Move to next untested item
     goToNextUntested();
@@ -145,7 +346,9 @@ export const TestingWorkflow: React.FC = () => {
     setSelectedTechniques([]);
     setSelectedFailures([]);
     setCustomTechniques([]);
+    setCustomTechniques([]);
     setToolsUsed('');
+    setCustomColumnValues({});
   };
 
   const goToNextUntested = () => {
@@ -190,6 +393,7 @@ export const TestingWorkflow: React.FC = () => {
       setSelectedFailures(existing.failuresFound);
       setCustomTechniques(existing.customTechniques.map(t => ({ description: t.description, checked: true })));
       setToolsUsed(existing.toolsUsed);
+      setCustomColumnValues(existing.customColumnValues || {});
     } else {
       setStatus('Not Tested');
       setNotes('');
@@ -197,6 +401,7 @@ export const TestingWorkflow: React.FC = () => {
       setSelectedFailures([]);
       setCustomTechniques([]);
       setToolsUsed('');
+      setCustomColumnValues({});
     }
   };
 
@@ -240,6 +445,114 @@ export const TestingWorkflow: React.FC = () => {
 
   const removeCustomTechnique = (index: number) => {
     setCustomTechniques((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  // Phase 6: Screenshot Handlers
+  const handleAddScreenshot = async (screenshot: Omit<Screenshot, 'id'>) => {
+    const newScreenshot: Screenshot = {
+      ...screenshot,
+      id: crypto.randomUUID(),
+    };
+    await addScreenshot(newScreenshot);
+    const updated = await getScreenshotsByTestResult(currentSC.id);
+    setScreenshots(updated);
+  };
+
+  const handleDeleteScreenshot = async (id: string) => {
+    await deleteScreenshot(id);
+    const updated = await getScreenshotsByTestResult(currentSC.id);
+    setScreenshots(updated);
+  };
+
+  const handleUpdateCaption = async (id: string, caption: string) => {
+    await updateScreenshotCaption(id, caption);
+    const updated = await getScreenshotsByTestResult(currentSC.id);
+    setScreenshots(updated);
+  };
+
+  // Phase 6: Data Conversion Helpers
+  const prepareProjectData = (scope: AuditScope = auditScope): Project => ({
+    id: 'current-audit', // Use fixed ID for active session
+    name: scope.pageTitle,
+    description: scope.pageUrl || '',
+    targetConformanceLevel: scope.conformanceLevels[0] || 'AA',
+    status: 'in-progress',
+    createdAt: new Date(),
+    modifiedAt: new Date(),
+    testingEnvironment: {
+      browsers: [{ name: 'Chrome', version: 'Latest' }],
+      assistiveTech: [{ name: 'NVDA', version: 'Latest', type: 'Screen Reader' }],
+      operatingSystems: [{ name: 'Windows', version: '11' }],
+      devices: [{ type: 'Desktop', name: 'PC' }]
+    },
+    vpatConfig: {
+      tone: 'formal',
+      customColumns: (scope.customColumns || []).map((col, index) => ({
+        id: `col-${index}`,
+        name: col,
+        description: '',
+        order: index
+      })),
+      additionalPages: [],
+      styleGuide: {},
+      includeExecutiveSummary: true,
+      includeRoadmap: false,
+      productName: scope.pageTitle,
+      productVersion: '1.0',
+      reportDate: new Date(),
+    },
+    components: [],
+    testingMode: 'by-criterion',
+  });
+
+  const prepareComponentData = (): Component => ({
+    id: crypto.randomUUID(),
+    name: auditScope.pageTitle,
+    type: 'component',
+    description: auditScope.pageUrl || '',
+    testDate: new Date(),
+    version: '1.0',
+    results: convertToTestResults(),
+    screenshots: [],
+    completed: results.size === schedule.length,
+  });
+
+  const convertToTestResults = (): DBTestResult[] => {
+    const testResults: DBTestResult[] = [];
+    
+    results.forEach((result, scId) => {
+      const sc = schedule.find(s => s.id === scId);
+      if (!sc) return;
+      
+      testResults.push({
+        id: scId,
+        successCriterionId: scId,
+        level: sc.scLevel as 'A' | 'AA' | 'AAA',
+        conformance: result.status === 'Not Tested' ? 'Not Applicable' : result.status,
+        observations: result.notes,
+        barriers: [],
+        testingMethod: {
+          type: 'Manual',
+          tools: result.toolsUsed ? [result.toolsUsed] : [],
+        },
+        customNotes: result.notes,
+        customColumnValues: result.customColumnValues,
+      });
+    });
+    
+    return testResults;
+  };
+
+  const getAllScreenshots = (): Screenshot[] => {
+    // For now, return current screenshots
+    // TODO: Aggregate all screenshots from all test results
+    return screenshots;
+  };
+
+  const getFailureCount = (): number => {
+    return Array.from(results.values()).filter(r => 
+      r.status === 'Does Not Support' || r.status === 'Partially Supports'
+    ).length;
   };
 
   const exportResults = () => {
@@ -359,8 +672,8 @@ export const TestingWorkflow: React.FC = () => {
         const isComplete = testedCriteria === totalCriteria && totalCriteria > 0;
 
         // Restore test results
-        const restoredResults = new Map<string, TestResult>();
-        importedData.wcagResults.forEach((result: any) => {
+        const restoredResults = new Map<string, UITestResult>();
+        importedData.wcagResults.forEach((result: { scNumber: string; status: ConformanceStatus | 'Not Tested'; notes: string; testedBy: string; testedDate: string; techniquesUsed: string[]; failuresFound: string[]; customTechniques: Array<{ description: string }>; toolsUsed: string; screenshots: string[]; customColumnValues?: Record<string, string> }) => {
           const scId = schedule.find(s => s.scNumber === result.scNumber)?.id;
           if (scId) {
             restoredResults.set(scId, {
@@ -375,6 +688,7 @@ export const TestingWorkflow: React.FC = () => {
               toolsUsed: result.toolsUsed || '',
               screenshots: result.screenshots || [],
               needsRecheck: isComplete, // Mark all for recheck if completed audit
+              customColumnValues: result.customColumnValues || {},
             });
           }
         });
@@ -551,6 +865,15 @@ export const TestingWorkflow: React.FC = () => {
           >
             {scheduleView === 'sc-based' ? '🔄 Component View' : '🔄 SC View'}
           </Button>
+          <Button 
+            onClick={handleClearAudit} 
+            variant="secondary" 
+            size="sm"
+            className="text-red-600 hover:bg-red-50"
+            title="Clear all data and start over"
+          >
+            🗑️ Clear Audit
+          </Button>
         </div>
         <div className="nav-controls">
           <Button onClick={goToPrevious} disabled={currentIndex === 0} size="sm">
@@ -563,15 +886,37 @@ export const TestingWorkflow: React.FC = () => {
             Next →
           </Button>
         </div>
-        <Button onClick={exportResults} variant="secondary" size="sm">
-          💾 Save & Exit
-        </Button>
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+          <Button onClick={() => setShowPDFDialog(true)} variant="primary" size="sm">
+            📄 Export PDF
+          </Button>
+          <Button 
+            onClick={() => setShowBugDialog(true)} 
+            variant="secondary" 
+            size="sm"
+            disabled={getFailureCount() === 0}
+            title={getFailureCount() === 0 ? 'No failures to report' : `Generate report for ${getFailureCount()} issues`}
+          >
+            🐛 Bugs ({getFailureCount()})
+          </Button>
+          <Button onClick={exportResults} variant="secondary" size="sm">
+            💾 Backup JSON
+          </Button>
+        </div>
       </div>
 
-      <main className="workflow-content">
-        <aside className="workflow-sidebar">
-          {!showComponentInfo ? (
-            <>
+      {scheduleView === 'component-based' ? (
+        <ComponentTestingView 
+          schedule={componentSchedule}
+          results={results}
+          scLookup={scLookup}
+          onUpdateResult={handleComponentResultUpdate}
+        />
+      ) : (
+        <main className="workflow-content">
+          <aside className="workflow-sidebar">
+            {!showComponentInfo ? (
+              <>
               <div className="sidebar-header">
                 <h3>Success Criteria List</h3>
                 <Button 
@@ -780,6 +1125,49 @@ export const TestingWorkflow: React.FC = () => {
               fullWidth
             />
 
+            {auditScope.customColumns && auditScope.customColumns.length > 0 && (
+              <div className="custom-columns-section" style={{ marginTop: '1rem' }}>
+                {auditScope.customColumns.map((col) => (
+                  <Input
+                    key={col}
+                    label={col}
+                    value={customColumnValues[col] || ''}
+                    onChange={(e) => setCustomColumnValues(prev => ({ ...prev, [col]: e.target.value }))}
+                    placeholder={`Enter ${col}...`}
+                    fullWidth
+                  />
+                ))}
+              </div>
+            )}
+
+            {/* Phase 6: Screenshot Management */}
+            <div className="testing-section" style={{ marginTop: '1.5rem' }}>
+              <h3 style={{ marginBottom: '1rem' }}>
+                Screenshots
+                {screenshots.length > 0 && (
+                  <span style={{ 
+                    marginLeft: '0.5rem', 
+                    fontSize: '0.875rem', 
+                    backgroundColor: 'var(--color-primary-light, #eef2ff)',
+                    color: 'var(--color-primary, #6366f1)',
+                    padding: '0.125rem 0.5rem',
+                    borderRadius: '12px',
+                    fontWeight: '500'
+                  }}>
+                    {screenshots.length}
+                  </span>
+                )}
+              </h3>
+              <ScreenshotManager
+                testResultId={currentSC.id}
+                componentId={auditScope.pageTitle}
+                screenshots={screenshots}
+                onAdd={handleAddScreenshot}
+                onDelete={handleDeleteScreenshot}
+                onUpdateCaption={handleUpdateCaption}
+              />
+            </div>
+
             <div className="form-actions">
               <Button onClick={handleSaveResult} variant="primary" size="lg" fullWidth>
                 Save & Continue
@@ -788,6 +1176,28 @@ export const TestingWorkflow: React.FC = () => {
           </div>
         </section>
       </main>
+      )}
+
+      {/* Phase 6: Export Dialogs */}
+      {showPDFDialog && (
+        <PDFExportDialog
+          project={prepareProjectData()}
+          components={[prepareComponentData()]}
+          results={convertToTestResults()}
+          screenshots={getAllScreenshots()}
+          onClose={() => setShowPDFDialog(false)}
+        />
+      )}
+
+      {showBugDialog && (
+        <BugReportGenerator
+          results={convertToTestResults()}
+          components={[prepareComponentData()]}
+          screenshots={getAllScreenshots()}
+          defaultComponentName={auditScope.pageTitle}
+          onClose={() => setShowBugDialog(false)}
+        />
+      )}
     </div>
   );
 };

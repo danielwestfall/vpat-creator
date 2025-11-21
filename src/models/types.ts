@@ -84,6 +84,7 @@ export interface TestResult {
   barriers: FunctionalBarrier[];
   testingMethod: TestingMethod;
   customNotes: string;
+  customColumnValues?: Record<string, string>;
   environmentOverride?: TestEnvironment;
   testedBy?: string;
   testedDate?: Date;
@@ -103,6 +104,27 @@ export interface Screenshot {
   caption?: string;
   annotations?: string;
   uploadedDate: Date;
+}
+
+// ============================================================================
+// BUG REPORTS
+// ============================================================================
+
+export interface BugReport {
+  id: string;
+  criterionId: string;
+  criterionNumber: string;
+  criterionName: string;
+  severity: 'critical' | 'major' | 'minor';
+  componentName: string;
+  description: string;
+  stepsToReproduce?: string;
+  codeSnippet?: string;
+  suggestedFix?: string;
+  screenshots: Screenshot[];
+  functionalBarriers: string[];
+  wcagLevel: ConformanceLevel;
+  reportedDate: string;
 }
 
 // ============================================================================

@@ -3,6 +3,10 @@
  * Access environment variables with type safety
  */
 
+import { createLogger } from './logger';
+
+const logger = createLogger('env');
+
 export const env = {
   // Application
   appName: import.meta.env.VITE_APP_NAME || 'VPAT Creator',
@@ -52,7 +56,7 @@ export function validateEnv(): boolean {
  */
 export function logEnvConfig(): void {
   if (env.isDevelopment) {
-    console.log('Environment Configuration:', {
+    logger.debug('Environment Configuration:', {
       appName: env.appName,
       appVersion: env.appVersion,
       dbName: env.dbName,

@@ -15,7 +15,99 @@ class WCAGService {
   private data: WCAGData;
 
   constructor() {
-    this.data = wcagData as WCAGData;
+    this.data = JSON.parse(JSON.stringify(wcagData)) as WCAGData; // Deep copy to allow modification
+    this.loadCustomCriteria();
+  }
+
+  /**
+   * Load custom criteria from local storage and inject into data
+   */
+  private loadCustomCriteria() {
+    try {
+      const customCriteriaJson = localStorage.getItem('vpat_custom_criteria');
+      if (customCriteriaJson) {
+        const customCriteria = JSON.parse(customCriteriaJson) as WCAGSuccessCriterion[];
+        
+        if (customCriteria.length > 0) {
+          // Check if Custom Principle exists
+          let customPrinciple = this.data.principles.find(p => p.id === 'custom');
+          
+          if (!customPrinciple) {
+            customPrinciple = {
+              id: 'custom',
+              num: '5',
+              handle: 'Custom',
+              title: 'Custom Criteria',
+              content: 'User-defined success criteria',
+              versions: ['2.2'],
+              guidelines: [{
+                id: 'custom-guideline',
+                num: '5.1',
+                handle: 'Custom Guidelines',
+                title: 'Custom Guidelines',
+                content: 'User-defined guidelines',
+                versions: ['2.2'],
+                successcriteria: []
+              }]
+            };
+            this.data.principles.push(customPrinciple);
+          }
+
+          // Add criteria to the first guideline of the custom principle
+          if (customPrinciple.guidelines.length > 0) {
+            customPrinciple.guidelines[0].successcriteria = customCriteria;
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load custom criteria:', error);
+    }
+  }
+
+  /**
+   * Add a new custom success criterion
+   */
+  addCustomCriterion(criterion: WCAGSuccessCriterion) {
+    try {
+      const existing = this.getSuccessCriterionById(criterion.id);
+      if (existing) {
+        throw new Error(`Criterion with ID ${criterion.id} already exists`);
+      }
+
+      // Get current custom criteria
+      const customCriteriaJson = localStorage.getItem('vpat_custom_criteria');
+      const customCriteria = customCriteriaJson ? JSON.parse(customCriteriaJson) as WCAGSuccessCriterion[] : [];
+      
+      customCriteria.push(criterion);
+      localStorage.setItem('vpat_custom_criteria', JSON.stringify(customCriteria));
+      
+      // Reload data
+      this.loadCustomCriteria();
+    } catch (error) {
+      console.error('Failed to add custom criterion:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Remove a custom success criterion
+   */
+  removeCustomCriterion(id: string) {
+    try {
+      const customCriteriaJson = localStorage.getItem('vpat_custom_criteria');
+      if (customCriteriaJson) {
+        let customCriteria = JSON.parse(customCriteriaJson) as WCAGSuccessCriterion[];
+        customCriteria = customCriteria.filter(c => c.id !== id);
+        localStorage.setItem('vpat_custom_criteria', JSON.stringify(customCriteria));
+        
+        // Reload data - simpler to just reset and reload
+        this.data = JSON.parse(JSON.stringify(wcagData)) as WCAGData;
+        this.loadCustomCriteria();
+      }
+    } catch (error) {
+      console.error('Failed to remove custom criterion:', error);
+      throw error;
+    }
   }
 
   /**

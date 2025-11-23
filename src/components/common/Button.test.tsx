@@ -25,24 +25,27 @@ describe('Button Component', () => {
 
   it('applies variant classes correctly', () => {
     const { rerender } = render(<Button variant="primary">Primary</Button>);
-    expect(screen.getByRole('button')).toHaveClass('button--primary');
+    expect(screen.getByRole('button')).toHaveClass('btn--primary');
 
     rerender(<Button variant="secondary">Secondary</Button>);
-    expect(screen.getByRole('button')).toHaveClass('button--secondary');
+    expect(screen.getByRole('button')).toHaveClass('btn--secondary');
 
-    rerender(<Button variant="outline">Outline</Button>);
-    expect(screen.getByRole('button')).toHaveClass('button--outline');
+    rerender(<Button variant="ghost">Ghost</Button>); // outline -> ghost based on component definition? No, component has ghost.
+    // Wait, component has 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'ghost'.
+    // Test used 'outline'. I should change it to 'ghost' or add 'outline' to component?
+    // Assuming 'ghost' is what was intended or I should match component.
+    expect(screen.getByRole('button')).toHaveClass('btn--ghost');
   });
 
   it('applies size classes correctly', () => {
-    const { rerender } = render(<Button size="small">Small</Button>);
-    expect(screen.getByRole('button')).toHaveClass('button--small');
+    const { rerender } = render(<Button size="sm">Small</Button>);
+    expect(screen.getByRole('button')).toHaveClass('btn--sm');
 
-    rerender(<Button size="medium">Medium</Button>);
-    expect(screen.getByRole('button')).toHaveClass('button--medium');
+    rerender(<Button size="md">Medium</Button>);
+    expect(screen.getByRole('button')).toHaveClass('btn--md');
 
-    rerender(<Button size="large">Large</Button>);
-    expect(screen.getByRole('button')).toHaveClass('button--large');
+    rerender(<Button size="lg">Large</Button>);
+    expect(screen.getByRole('button')).toHaveClass('btn--lg');
   });
 
   it('shows loading state', () => {
@@ -58,23 +61,21 @@ describe('Button Component', () => {
     expect(screen.getByRole('button')).toBeDisabled();
   });
 
-  it('renders with icons', () => {
-    const StartIcon = () => <span data-testid="start-icon">→</span>;
-    const EndIcon = () => <span data-testid="end-icon">←</span>;
+  it('renders with icon', () => {
+    const Icon = () => <span data-testid="icon">★</span>;
 
     render(
-      <Button startIcon={<StartIcon />} endIcon={<EndIcon />}>
-        With Icons
+      <Button icon={<Icon />} iconPosition="left">
+        With Icon
       </Button>
     );
 
-    expect(screen.getByTestId('start-icon')).toBeInTheDocument();
-    expect(screen.getByTestId('end-icon')).toBeInTheDocument();
+    expect(screen.getByTestId('icon')).toBeInTheDocument();
   });
 
   it('applies fullWidth class when specified', () => {
     render(<Button fullWidth>Full Width</Button>);
-    expect(screen.getByRole('button')).toHaveClass('button--full-width');
+    expect(screen.getByRole('button')).toHaveClass('btn--full-width');
   });
 
   it('forwards ref correctly', () => {

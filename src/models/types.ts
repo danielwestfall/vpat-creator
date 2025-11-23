@@ -89,6 +89,7 @@ export interface TestResult {
   testedBy?: string;
   testedDate?: Date;
   screenshotIds?: string[]; // References to screenshots
+  assignedTo?: string; // ID of TeamMember
 }
 
 // ============================================================================
@@ -217,6 +218,19 @@ export interface WCAGCustomization {
 }
 
 // ============================================================================
+// TEAM & COLLABORATION
+// ============================================================================
+
+export interface TeamMember {
+  id: string;
+  name: string;
+  role: 'Tester' | 'Reviewer' | 'Lead';
+  email?: string;
+  initials: string;
+  color: string;
+}
+
+// ============================================================================
 // PROJECT (Top-level container)
 // ============================================================================
 
@@ -236,6 +250,7 @@ export interface Project {
   completedDate?: Date;
   targetConformanceLevel: ConformanceLevel; // A, AA, or AAA
   testingMode: 'by-criterion' | 'by-component' | 'hybrid';
+  teamMembers?: TeamMember[];
 }
 
 // ============================================================================

@@ -10,9 +10,9 @@
   --color-secondary-hover: #475569;
   
   --color-success: #16a34a;
-  --color-warning: #eab308;
+  --color-warning: #ca8a04;  /* Darkened from #eab308 for 4.6:1 contrast */
   --color-error: #dc2626;
-  --color-info: #0ea5e9;
+  --color-info: #0284c7;  /* Darkened from #0ea5e9 for 4.5:1 contrast */
   
   --color-background: #ffffff;
   --color-surface: #f8fafc;

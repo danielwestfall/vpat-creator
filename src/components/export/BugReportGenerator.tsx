@@ -26,7 +26,7 @@ export function BugReportGenerator({
   onClose,
   defaultComponentName,
 }: BugReportGeneratorProps) {
-  const [bugs, setBugs] = useState<BugReport[]>(() =>
+  const [bugs] = useState<BugReport[]>(() =>
     extractBugsFromResults(results, components, screenshots, defaultComponentName)
   );
   const [selectedFormat, setSelectedFormat] = useState<'markdown' | 'csv' | 'json'>('markdown');

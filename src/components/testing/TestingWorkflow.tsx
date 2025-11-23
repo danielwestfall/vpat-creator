@@ -19,8 +19,13 @@ import {
   clearCurrentAudit
 } from '../../services/database';
 import { ComponentTestingView } from './ComponentTestingView';
+import { TeamManagement } from '../settings/TeamManagement';
+import { ShareDialog } from '../sharing/ShareDialog';
+import { ConflictResolutionDialog } from '../merge/ConflictResolutionDialog';
+import { mergeAudits, applyMergeResolutions, type MergeResult } from '../../services/merge-service';
 import type { TestingScheduleItem, ComponentCategory } from '../../utils/testing-schedule-generator';
-import type { ConformanceStatus, Screenshot, Project, Component, TestResult as DBTestResult } from '../../models/types';
+import type { ConformanceStatus, Screenshot, Project, Component, TestResult as DBTestResult, TeamMember } from '../../models/types';
+import { getTeamMembers } from '../../services/database';
 import './TestingWorkflow.css';
 
 // UI-level test result (used in component state)
@@ -37,6 +42,7 @@ interface UITestResult {
   screenshots: string[];
   needsRecheck?: boolean; // For marking completed audits that need re-verification
   customColumnValues?: Record<string, string>;
+  assignedTo?: string;
 }
 
 // Helper functions to convert between UI and DB test results
@@ -56,6 +62,7 @@ const uiResultToDbResult = (uiResult: UITestResult, scLevel: string): DBTestResu
   testedBy: uiResult.testedBy,
   testedDate: uiResult.testedDate,
   screenshotIds: uiResult.screenshots,
+  assignedTo: uiResult.assignedTo,
 });
 
 const dbResultToUiResult = (dbResult: DBTestResult): UITestResult => ({
@@ -71,13 +78,30 @@ const dbResultToUiResult = (dbResult: DBTestResult): UITestResult => ({
   screenshots: dbResult.screenshotIds || [],
   needsRecheck: false,
   customColumnValues: dbResult.customColumnValues,
+  assignedTo: dbResult.assignedTo,
 });
 
 type ScheduleView = 'sc-based' | 'component-based';
 
-export const TestingWorkflow: React.FC = () => {
+import type { VPATTemplate } from '../../models/template-types';
+
+// ... (keep existing imports)
+
+interface TestingWorkflowProps {
+  activeTemplate?: VPATTemplate;
+}
+
+export const TestingWorkflow: React.FC<TestingWorkflowProps> = ({ activeTemplate }) => {
   const [auditScope, setAuditScope] = React.useState<AuditScope | null>(null);
   const [schedule, setSchedule] = React.useState<TestingScheduleItem[]>([]);
+
+  // Use template columns if available
+  const templateColumns = React.useMemo(() => {
+    if (!activeTemplate?.columns) return [];
+    return activeTemplate.columns
+      .filter(col => col.enabled)
+      .map(col => ({ id: col.id, label: col.label }));
+  }, [activeTemplate]);
   const [currentIndex, setCurrentIndex] = React.useState(0);
   const [results, setResults] = React.useState<Map<string, UITestResult>>(new Map());
   const [notes, setNotes] = React.useState('');
@@ -104,6 +128,20 @@ export const TestingWorkflow: React.FC = () => {
   const [scSchedule, setSCSchedule] = React.useState<TestingScheduleItem[]>([]);
   const [scLookup, setScLookup] = React.useState<Map<string, string>>(new Map());
   const [isLoading, setIsLoading] = React.useState(true);
+
+  // Collaboration
+  const [showTeamManagement, setShowTeamManagement] = React.useState(false);
+  const [teamMembers, setTeamMembers] = React.useState<TeamMember[]>([]);
+  const [assignedTo, setAssignedTo] = React.useState<string>('');
+  const [filterAssignedToMe, setFilterAssignedToMe] = React.useState(false);
+  const [currentUser, setCurrentUser] = React.useState<string>(''); // ID of current user for filtering
+
+  // Share
+  const [showShareDialog, setShowShareDialog] = React.useState(false);
+
+  // Merge
+  const [showMergeDialog, setShowMergeDialog] = React.useState(false);
+  const [mergeResult, setMergeResult] = React.useState<MergeResult | null>(null);
 
   // Load saved state on mount
   React.useEffect(() => {
@@ -146,8 +184,22 @@ export const TestingWorkflow: React.FC = () => {
     };
     
     loadSavedState();
+    loadTeamMembers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const loadTeamMembers = async () => {
+    try {
+      const members = await getTeamMembers();
+      setTeamMembers(members);
+      // Default current user to first member if exists, for testing
+      if (members.length > 0 && !currentUser) {
+        setCurrentUser(members[0].id);
+      }
+    } catch (error) {
+      console.error('Failed to load team members:', error);
+    }
+  };
 
   const handleScopeConfirmed = React.useCallback(async (scope: AuditScope, saveToDb = true) => {
     setAuditScope(scope);
@@ -301,6 +353,7 @@ export const TestingWorkflow: React.FC = () => {
       screenshots: existing?.screenshots || [],
       needsRecheck: false,
       customColumnValues: existing?.customColumnValues || {},
+      assignedTo: existing?.assignedTo,
     };
 
     setResults(new Map(results.set(scId, newResult)));
@@ -329,6 +382,7 @@ export const TestingWorkflow: React.FC = () => {
       screenshots: [], // TODO: Add screenshot upload
       needsRecheck: false,
       customColumnValues,
+      assignedTo,
     };
 
     setResults(new Map(results.set(currentSC.id, result)));
@@ -345,7 +399,6 @@ export const TestingWorkflow: React.FC = () => {
     setStatus('Not Tested');
     setSelectedTechniques([]);
     setSelectedFailures([]);
-    setCustomTechniques([]);
     setCustomTechniques([]);
     setToolsUsed('');
     setCustomColumnValues({});
@@ -394,6 +447,7 @@ export const TestingWorkflow: React.FC = () => {
       setCustomTechniques(existing.customTechniques.map(t => ({ description: t.description, checked: true })));
       setToolsUsed(existing.toolsUsed);
       setCustomColumnValues(existing.customColumnValues || {});
+      setAssignedTo(existing.assignedTo || '');
     } else {
       setStatus('Not Tested');
       setNotes('');
@@ -402,6 +456,7 @@ export const TestingWorkflow: React.FC = () => {
       setCustomTechniques([]);
       setToolsUsed('');
       setCustomColumnValues({});
+      setAssignedTo('');
     }
   };
 
@@ -721,6 +776,116 @@ export const TestingWorkflow: React.FC = () => {
     event.target.value = '';
   };
 
+  //Merge handler for importing and merging results
+  const handleMergeResults = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const importedData = JSON.parse(e.target?.result as string);
+        
+        // Validate imported data structure
+        if (!importedData.auditScope || !importedData.wcagResults) {
+          alert('❌ Invalid file format. Please select a valid VPAT test results file.');
+          return;
+        }
+
+        // Convert current results to TestResult format for merge
+        const currentResults: DBTestResult[] = convertToTestResults();
+        
+        // Convert imported results to TestResult format
+        const incomingResults: DBTestResult[] = [];
+        importedData.wcagResults.forEach((result: any) => {
+          const sc = schedule.find(s => s.scNumber === result.scNumber);
+          if (sc) {
+            incomingResults.push({
+              id: sc.id,
+              successCriterionId: sc.id,
+              level: sc.scLevel as 'A' | 'AA' | 'AAA',
+              conformance: result.status === 'Not Tested' ? 'Not Applicable' : result.status,
+              observations: result.notes,
+              barriers: [],
+              testingMethod: {
+                type: 'Manual',
+                tools: result.toolsUsed ? [result.toolsUsed] : [],
+              },
+              customNotes: result.notes,
+              customColumnValues: result.customColumnValues,
+              testedBy: result.testedBy,
+              testedDate: new Date(result.testedDate),
+              screenshotIds: result.screenshots || [],
+              assignedTo: result.assignedTo,
+            });
+          }
+        });
+
+        // Get team members (or empty arrays if not available)
+        const currentTeamMembers = teamMembers || [];
+        const incomingTeamMembers: TeamMember[] = importedData.teamMembers || [];
+
+        // Perform merge
+        const currentProject = prepareProjectData();
+        const incomingProject = {
+          ...currentProject,
+          name: importedData.auditScope.pageTitle,
+          description: importedData.auditScope.pageUrl || '',
+        };
+
+        const merge = mergeAudits(
+          currentProject,
+          currentResults,
+          currentTeamMembers,
+          incomingProject,
+          incomingResults,
+          incomingTeamMembers
+        );
+
+        // Update team members immediately
+        setTeamMembers(merge.mergedTeamMembers);
+
+        if (merge.conflicts.length > 0) {
+          // Show conflict resolution dialog
+          setMergeResult(merge);
+          setShowMergeDialog(true);
+        } else {
+          // No conflicts - apply merge immediately
+          applyMerge(merge, new Map());
+        }
+      } catch (error) {
+        alert('❌ Error reading file. Please ensure it\'s a valid JSON file.');
+        console.error(error);
+      }
+    };
+    reader.readAsText(file);
+    
+    // Reset the input so the same file can be selected again
+    event.target.value = '';
+  };
+
+  const applyMerge = (merge: MergeResult, resolutions: Map<string, 'local' | 'incoming'>) => {
+    // Apply resolved merges
+    const finalResults = applyMergeResolutions(merge, resolutions);
+    
+    // Convert final results to UI format
+    const mergedUIResults = new Map<string, UITestResult>();
+    finalResults.forEach(result => {
+      mergedUIResults.set(result.successCriterionId, dbResultToUiResult(result));
+    });
+    
+    setResults(mergedUIResults);
+    setShowMergeDialog(false);
+    setMergeResult(null);
+
+    // Show success message
+    const message = merge.conflicts.length > 0
+      ? `✅ Merge complete! Resolved ${merge.conflicts.length} conflicts. ${merge.summary.autoMerged} tests auto-merged, ${merge.summary.new} new tests added.`
+      : `✅ Merge complete! ${merge.summary.autoMerged} tests auto-merged, ${merge.summary.new} new tests added.`;
+    
+    alert(message);
+  };
+
   if (schedule.length === 0) {
     return (
       <div className="workflow-loading">
@@ -891,6 +1056,14 @@ export const TestingWorkflow: React.FC = () => {
             📄 Export PDF
           </Button>
           <Button 
+            onClick={() => setShowShareDialog(true)} 
+            variant="primary" 
+            size="sm"
+            title="Share audit with team members"
+          >
+            📤 Share
+          </Button>
+          <Button 
             onClick={() => setShowBugDialog(true)} 
             variant="secondary" 
             size="sm"
@@ -902,8 +1075,47 @@ export const TestingWorkflow: React.FC = () => {
           <Button onClick={exportResults} variant="secondary" size="sm">
             💾 Backup JSON
           </Button>
+          <label htmlFor="merge-upload" style={{ display: 'inline-block', cursor: 'pointer' }}>
+            <Button variant="secondary" size="sm">
+              🔀 Import & Merge
+            </Button>
+          </label>
+          <input
+            id="merge-upload"
+            type="file"
+            accept=".json"
+            onChange={handleMergeResults}
+            style={{ display: 'none' }}
+          />
         </div>
       </div>
+
+      {showTeamManagement && (
+        <TeamManagement 
+          onClose={() => setShowTeamManagement(false)} 
+          onUpdate={loadTeamMembers}
+        />
+      )}
+
+      {showShareDialog && (
+        <ShareDialog
+          project={prepareProjectData()}
+          results={convertToTestResults()}
+          teamMembers={teamMembers}
+          onClose={() => setShowShareDialog(false)}
+        />
+      )}
+
+      {showMergeDialog && mergeResult && (
+        <ConflictResolutionDialog
+          mergeResult={mergeResult}
+          onResolve={(resolutions) => applyMerge(mergeResult, resolutions)}
+          onCancel={() => {
+            setShowMergeDialog(false);
+            setMergeResult(null);
+          }}
+        />
+      )}
 
       {scheduleView === 'component-based' ? (
         <ComponentTestingView 
@@ -918,15 +1130,40 @@ export const TestingWorkflow: React.FC = () => {
             {!showComponentInfo ? (
               <>
               <div className="sidebar-header">
-                <h3>Success Criteria List</h3>
-                <Button 
-                  onClick={() => setShowComponentInfo(true)} 
-                  size="sm" 
-                  variant="secondary"
-                  title="View component testing guide"
-                >
-                  📚 Component Guide
-                </Button>
+                <div className="flex justify-between items-center w-full mb-2">
+                  <h3>Success Criteria List</h3>
+                  <Button 
+                    onClick={() => setShowTeamManagement(true)} 
+                    size="sm" 
+                    variant="secondary"
+                    title="Manage team members"
+                  >
+                    👥 Team
+                  </Button>
+                </div>
+                
+                <div className="flex gap-2 mb-2">
+                  <Button 
+                    onClick={() => setShowComponentInfo(true)} 
+                    size="sm" 
+                    variant="secondary"
+                    title="View component testing guide"
+                    className="flex-1"
+                  >
+                    📚 Guide
+                  </Button>
+                  {teamMembers.length > 0 && (
+                    <label className="flex items-center gap-2 text-sm cursor-pointer px-2 py-1 rounded hover:bg-gray-100 border border-transparent hover:border-gray-200">
+                      <input 
+                        type="checkbox" 
+                        checked={filterAssignedToMe} 
+                        onChange={(e) => setFilterAssignedToMe(e.target.checked)}
+                        className="rounded text-indigo-600"
+                      />
+                      <span>My Tasks</span>
+                    </label>
+                  )}
+                </div>
               </div>
               {results.size > 0 && (
                 <div className="sidebar-info">
@@ -934,7 +1171,17 @@ export const TestingWorkflow: React.FC = () => {
                 </div>
               )}
               <div className="sc-list">
-                {schedule.map((sc, index) => (
+                {schedule
+                  .filter(sc => {
+                    if (!filterAssignedToMe) return true;
+                    const result = results.get(sc.id);
+                    return result?.assignedTo === currentUser;
+                  })
+                  .map((sc, index) => {
+                    const result = results.get(sc.id);
+                    const assignee = teamMembers.find(m => m.id === result?.assignedTo);
+                    
+                    return (
                   <button
                     key={sc.id}
                     className={`sc-list-item ${index === currentIndex ? 'active' : ''} ${
@@ -943,10 +1190,24 @@ export const TestingWorkflow: React.FC = () => {
                     onClick={() => jumpToSC(index)}
                   >
                     <span className="sc-number">{sc.scNumber}</span>
-                    <span className="sc-title">{sc.scTitle}</span>
+                    <div className="flex-1 text-left overflow-hidden">
+                      <span className="sc-title block truncate">{sc.scTitle}</span>
+                      {assignee && (
+                        <span className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
+                          <span 
+                            className="w-4 h-4 rounded-full flex items-center justify-center text-[10px] text-white font-bold"
+                            style={{ backgroundColor: assignee.color }}
+                          >
+                            {assignee.initials}
+                          </span>
+                          {assignee.name}
+                        </span>
+                      )}
+                    </div>
                     {results.has(sc.id) && <span className="sc-check">✓</span>}
                   </button>
-                ))}
+                );
+              })}
               </div>
             </>
           ) : (
@@ -1107,6 +1368,21 @@ export const TestingWorkflow: React.FC = () => {
               fullWidth
             />
 
+            {teamMembers.length > 0 && (
+              <div className="mb-4">
+                <Select
+                  label="Assign To"
+                  value={assignedTo}
+                  onValueChange={setAssignedTo}
+                  options={[
+                    { value: '', label: 'Unassigned' },
+                    ...teamMembers.map(m => ({ value: m.id, label: `${m.name} (${m.role})` }))
+                  ]}
+                  fullWidth
+                />
+              </div>
+            )}
+
             <Input
               label="Notes / Remarks"
               value={notes}
@@ -1125,20 +1401,28 @@ export const TestingWorkflow: React.FC = () => {
               fullWidth
             />
 
-            {auditScope.customColumns && auditScope.customColumns.length > 0 && (
-              <div className="custom-columns-section" style={{ marginTop: '1rem' }}>
-                {auditScope.customColumns.map((col) => (
-                  <Input
-                    key={col}
-                    label={col}
-                    value={customColumnValues[col] || ''}
-                    onChange={(e) => setCustomColumnValues(prev => ({ ...prev, [col]: e.target.value }))}
-                    placeholder={`Enter ${col}...`}
-                    fullWidth
-                  />
-                ))}
-              </div>
-            )}
+            {(() => {
+              const columnsToRender = templateColumns.length > 0 
+                ? templateColumns 
+                : (auditScope.customColumns || []).map(c => ({ id: c, label: c }));
+              
+              if (columnsToRender.length === 0) return null;
+
+              return (
+                <div className="custom-columns-section" style={{ marginTop: '1rem' }}>
+                  {columnsToRender.map((col) => (
+                    <Input
+                      key={col.id}
+                      label={col.label}
+                      value={customColumnValues[col.label] || ''}
+                      onChange={(e) => setCustomColumnValues(prev => ({ ...prev, [col.label]: e.target.value }))}
+                      placeholder={`Enter ${col.label}...`}
+                      fullWidth
+                    />
+                  ))}
+                </div>
+              );
+            })()}
 
             {/* Phase 6: Screenshot Management */}
             <div className="testing-section" style={{ marginTop: '1.5rem' }}>
@@ -1185,6 +1469,7 @@ export const TestingWorkflow: React.FC = () => {
           components={[prepareComponentData()]}
           results={convertToTestResults()}
           screenshots={getAllScreenshots()}
+          template={activeTemplate}
           onClose={() => setShowPDFDialog(false)}
         />
       )}

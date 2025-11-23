@@ -179,6 +179,26 @@ The application supports testing for:
 - **86 Success Criteria** - Complete A, AA, and AAA coverage
 - **Techniques** - Sufficient, advisory, and failure techniques
 
+## ♿ Accessibility & ATAG Compliance
+
+This tool aims to conform to the **Authoring Tool Accessibility Guidelines (ATAG) 2.0**.
+
+### Part A: Making the Authoring Tool Accessible
+The VPAT Creator interface is designed to be accessible to all authors:
+- **Keyboard Support** - Full keyboard navigability for all workflows (A.3.1).
+- **Contrast** - High contrast text and UI elements meeting WCAG AA ratios (A.3.2).
+- **Screen Reader Support** - Semantic HTML, ARIA labels, and live regions for dynamic updates (A.3.6).
+- **Focus Management** - Visible focus indicators and logical tab order (A.3.5).
+- **No Flashing** - UI avoids flashing content that could trigger seizures (A.3.3).
+
+### Part B: Supporting Accessible Content Production
+The tool helps authors generate accessible VPAT reports:
+- **Guided Testing** - Provides clear instructions and WCAG criteria explanations (B.2.3).
+- **Accessible Export** - Generated reports are structured for accessibility (B.2.1).
+- **Validation** - Prompts authors to check for accessibility issues (B.3.1).
+- **Repair Assistance** - Offers techniques and suggestions for fixing failures (B.3.2).
+- **Template Management** - Supports creating accessible templates with proper structure (B.2.4).
+
 ## 🔒 Data Storage
 
 All audit data is stored locally using IndexedDB:

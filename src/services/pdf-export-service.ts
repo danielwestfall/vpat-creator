@@ -2,25 +2,17 @@ import jsPDF from 'jspdf';
 import type { Project, TestResult, Component, Screenshot } from '../models/types';
 import { wcagService } from './wcag-service';
 import { createLogger } from '../utils/logger';
+import type { VPATTemplate } from '../models/template-types';
 
 const logger = createLogger('pdf-export');
 
 export interface VPATExportOptions {
-  format: '2.4' | '2.5-international';
-  includeScreenshots: boolean;
-  tone: 'formal' | 'friendly';
-  includeExecutiveSummary: boolean;
-}
-
-/**
- * Generate VPAT PDF from project data
- */
-export async function generateVPATPDF(
   project: Project,
-  components: Component[],
+  _components: Component[],
   results: TestResult[],
   screenshots: Screenshot[],
-  options: VPATExportOptions
+  options: VPATExportOptions,
+  template?: VPATTemplate
 ): Promise<Blob> {
   try {
     logger.info('Generating VPAT PDF', { projectId: project.id, format: options.format });

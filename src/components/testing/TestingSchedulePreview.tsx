@@ -146,25 +146,48 @@ export const TestingSchedulePreview: React.FC = () => {
             </Button>
           </div>
 
-          <div className="schedule-preview-list">
-            <h3>Sample Items (first 5)</h3>
-            {scSchedule.slice(0, 5).map((item) => (
-              <div key={item.id} className="schedule-item">
-                <h4>
-                  {item.scNumber} {item.scTitle}
-                  <span className="level-badge level-{item.scLevel.toLowerCase()}">
-                    Level {item.scLevel}
-                  </span>
-                </h4>
-                <p className="guideline">{item.guideline}</p>
-                <p className="description">{item.description.substring(0, 200)}...</p>
-                <div className="item-meta">
-                  <span>⏱️ {item.estimatedTime} minutes</span>
-                  <span>🔧 {item.sufficientTechniques.length} techniques</span>
-                  <span>⚠️ {item.failures.length} failures</span>
+          <div className="getting-started-guide">
+            <h3>🚀 Getting Started</h3>
+            <div className="instruction-steps">
+              <div className="instruction-step">
+                <div className="step-number">1</div>
+                <div className="step-content">
+                  <h4>Go to the Workflow Tab</h4>
+                  <p>Click the <strong>"Workflow"</strong> button in the top navigation bar</p>
                 </div>
               </div>
-            ))}
+              <div className="instruction-step">
+                <div className="step-number">2</div>
+                <div className="step-content">
+                  <h4>Start a New Audit</h4>
+                  <p>Click <strong>"Start New Audit"</strong> and configure your audit scope (WCAG version, conformance levels, etc.)</p>
+                </div>
+              </div>
+              <div className="instruction-step">
+                <div className="step-number">3</div>
+                <div className="step-content">
+                  <h4>Begin Testing</h4>
+                  <p>Work through each success criterion, recording conformance status, notes, and screenshots</p>
+                </div>
+              </div>
+              <div className="instruction-step">
+                <div className="step-number">4</div>
+                <div className="step-content">
+                  <h4>Export Your Results</h4>
+                  <p>Generate a VPAT PDF report, share with team members, or export JSON for backup</p>
+                </div>
+              </div>
+            </div>
+            <div className="getting-started-features">
+              <h4>✨ Key Features</h4>
+              <ul>
+                <li><strong>Auto-save:</strong> Your progress is automatically saved in your browser</li>
+                <li><strong>Team Collaboration:</strong> Assign test criteria to team members and share audits</li>
+                <li><strong>Screenshots:</strong> Capture and annotate evidence directly in the app</li>
+                <li><strong>Bug Reports:</strong> Automatically generate bug reports from failed criteria</li>
+                <li><strong>Export Options:</strong> PDF VPAT, JSON backup, or Markdown formats</li>
+              </ul>
+            </div>
           </div>
         </div>
       )}

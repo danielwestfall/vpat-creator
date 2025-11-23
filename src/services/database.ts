@@ -6,6 +6,7 @@ import type {
   TestResult,
   Screenshot,
   WCAGCustomization,
+  TeamMember,
 } from '../models/types';
 
 const logger = createLogger('database');
@@ -338,6 +339,107 @@ export async function clearCurrentAudit(): Promise<void> {
     logger.info('Current audit cleared');
   } catch (error) {
     logger.error('Failed to clear audit:', error);
+    throw error;
+  }
+}
+// ============================================================================
+// TEAM MANAGEMENT OPERATIONS
+// ============================================================================
+
+/**
+ * Get all team members for the current project
+ */
+export async function getTeamMembers(): Promise<TeamMember[]> {
+  try {
+    const project = await getCurrentProject();
+    return project?.teamMembers || [];
+  } catch (error) {
+    logger.error('Failed to get team members:', error);
+    throw error;
+  }
+}
+
+/**
+ * Add a team member to the current project
+ */
+export async function addTeamMember(member: TeamMember): Promise<void> {
+  try {
+    const project = await getCurrentProject();
+    if (!project) throw new Error('No active project found');
+
+    const teamMembers = project.teamMembers || [];
+    // Check if member already exists
+    if (teamMembers.some(m => m.id === member.id)) {
+      throw new Error('Team member already exists');
+    }
+
+    const updatedProject = {
+      ...project,
+      teamMembers: [...teamMembers, member],
+      modifiedAt: new Date(),
+    };
+
+    await saveCurrentProject(updatedProject);
+    logger.info('Team member added:', member.name);
+  } catch (error) {
+    logger.error('Failed to add team member:', error);
+    throw error;
+  }
+}
+
+/**
+ * Update a team member
+ */
+export async function updateTeamMember(member: TeamMember): Promise<void> {
+  try {
+    const project = await getCurrentProject();
+    if (!project) throw new Error('No active project found');
+
+    const teamMembers = project.teamMembers || [];
+    const index = teamMembers.findIndex(m => m.id === member.id);
+    
+    if (index === -1) {
+      throw new Error('Team member not found');
+    }
+
+    const updatedMembers = [...teamMembers];
+    updatedMembers[index] = member;
+
+    const updatedProject = {
+      ...project,
+      teamMembers: updatedMembers,
+      modifiedAt: new Date(),
+    };
+
+    await saveCurrentProject(updatedProject);
+    logger.info('Team member updated:', member.name);
+  } catch (error) {
+    logger.error('Failed to update team member:', error);
+    throw error;
+  }
+}
+
+/**
+ * Remove a team member
+ */
+export async function removeTeamMember(id: string): Promise<void> {
+  try {
+    const project = await getCurrentProject();
+    if (!project) throw new Error('No active project found');
+
+    const teamMembers = project.teamMembers || [];
+    const updatedMembers = teamMembers.filter(m => m.id !== id);
+
+    const updatedProject = {
+      ...project,
+      teamMembers: updatedMembers,
+      modifiedAt: new Date(),
+    };
+
+    await saveCurrentProject(updatedProject);
+    logger.info('Team member removed:', id);
+  } catch (error) {
+    logger.error('Failed to remove team member:', error);
     throw error;
   }
 }

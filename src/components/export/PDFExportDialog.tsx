@@ -1,15 +1,13 @@
-import { useState } from 'react';
-import { generateVPATPDF, downloadPDF, type VPATExportOptions } from '../../services/pdf-export-service';
-import type { Project, TestResult, Component, Screenshot } from '../../models/types';
-import { Button } from '../common';
-import { toast } from '../../store/toast-store';
-import './PDFExportDialog.css';
+import type { VPATTemplate } from '../../models/template-types';
+
+// ... (keep existing imports)
 
 export interface PDFExportDialogProps {
   project: Project;
   components: Component[];
   results: TestResult[];
   screenshots: Screenshot[];
+  template?: VPATTemplate;
   onClose: () => void;
 }
 
@@ -18,22 +16,17 @@ export function PDFExportDialog({
   components,
   results,
   screenshots,
+  template,
   onClose,
 }: PDFExportDialogProps) {
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [options, setOptions] = useState<VPATExportOptions>({
-    format: '2.5-international',
-    includeScreenshots: false,
-    tone: 'formal',
-    includeExecutiveSummary: true,
-  });
+  // ... (keep existing state)
 
   const handleGenerate = async () => {
     try {
       setIsGenerating(true);
       toast.info('Generating PDF...');
 
-      const pdfBlob = await generateVPATPDF(project, components, results, screenshots, options);
+      const pdfBlob = await generateVPATPDF(project, components, results, screenshots, options, template);
 
       const filename = `VPAT_${project.name.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
       downloadPDF(pdfBlob, filename);

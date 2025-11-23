@@ -1,83 +1,113 @@
-import { useState } from 'react';
-import { ComponentDemo } from './ComponentDemo';
-import { TestingSchedulePreview } from './components/testing/TestingSchedulePreview';
+import { useState, useEffect } from 'react';
 import { TestingWorkflow } from './components/testing/TestingWorkflow';
-import { StyleGuidePage } from './pages/StyleGuidePage';
-import { RoadmapPage } from './pages/RoadmapPage';
-import { CustomCriteriaPage } from './pages/CustomCriteriaPage';
-import { Button } from './components/common';
+import { TemplateLibrary } from './components/templates/TemplateLibrary';
+import { TemplateEditor } from './components/templates/TemplateEditor';
+import { HelpCenter } from './components/help/HelpCenter';
+import { getDefaultTemplate } from './services/template-service';
+import type { VPATTemplate } from './models/template-types';
 import './App.css';
 
+type View = 'testing' | 'templates';
+
 function App() {
-  const [view, setView] = useState<'components' | 'schedule' | 'workflow' | 'style-guide' | 'roadmap' | 'custom-criteria'>('schedule');
+  const [view, setView] = useState<View>('testing');
+  const [showHelp, setShowHelp] = useState(false);
+  const [activeTemplate, setActiveTemplate] = useState<VPATTemplate | undefined>(undefined);
+  const [editingTemplate, setEditingTemplate] = useState<VPATTemplate | undefined>(undefined);
+  const [isCreatingTemplate, setIsCreatingTemplate] = useState(false);
+
+  useEffect(() => {
+    // Initialize default template if needed
+    const init = async () => {
+      const defaultTemplate = await getDefaultTemplate();
+      if (defaultTemplate) {
+        setActiveTemplate(defaultTemplate);
+      }
+    };
+    init().catch(console.error);
+  }, []);
+
+  const handleEditTemplate = (template: VPATTemplate) => {
+    setEditingTemplate(template);
+    setIsCreatingTemplate(false);
+  };
+
+  const handleCreateTemplate = () => {
+    setEditingTemplate(undefined);
+    setIsCreatingTemplate(true);
+  };
+
+  const handleApplyTemplate = (template: VPATTemplate) => {
+    setActiveTemplate(template);
+    setView('testing');
+  };
+
+  const handleSaveTemplate = (template: VPATTemplate) => {
+    setEditingTemplate(undefined);
+    setIsCreatingTemplate(false);
+    // If the saved template is the active one, update it
+    if (activeTemplate && activeTemplate.id === template.id) {
+      setActiveTemplate(template);
+    }
+  };
 
   return (
-    <div>
-      <div style={{ 
-        position: 'fixed', 
-        top: '1rem', 
-        right: '1rem', 
-        zIndex: 1000,
-        display: 'flex',
-        gap: '0.5rem',
-        flexWrap: 'wrap',
-        justifyContent: 'flex-end',
-        padding: '0.5rem',
-        background: 'rgba(255,255,255,0.9)',
-        borderRadius: '8px',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-      }}>
-        <Button 
-          variant={view === 'schedule' ? 'primary' : 'secondary'}
-          onClick={() => setView('schedule')}
-          size="sm"
-        >
-          Schedules
-        </Button>
-        <Button 
-          variant={view === 'workflow' ? 'primary' : 'secondary'}
-          onClick={() => setView('workflow')}
-          size="sm"
-        >
-          Workflow
-        </Button>
-        <Button 
-          variant={view === 'style-guide' ? 'primary' : 'secondary'}
-          onClick={() => setView('style-guide')}
-          size="sm"
-        >
-          Style Guide
-        </Button>
-        <Button 
-          variant={view === 'roadmap' ? 'primary' : 'secondary'}
-          onClick={() => setView('roadmap')}
-          size="sm"
-        >
-          Roadmap
-        </Button>
-        <Button 
-          variant={view === 'custom-criteria' ? 'primary' : 'secondary'}
-          onClick={() => setView('custom-criteria')}
-          size="sm"
-        >
-          Custom Criteria
-        </Button>
-        <Button 
-          variant={view === 'components' ? 'primary' : 'secondary'}
-          onClick={() => setView('components')}
-          size="sm"
-        >
-          Demo
-        </Button>
-      </div>
-      <div style={{ paddingTop: '4rem' }}>
-        {view === 'components' && <ComponentDemo />}
-        {view === 'workflow' && <TestingWorkflow />}
-        {view === 'schedule' && <TestingSchedulePreview />}
-        {view === 'style-guide' && <StyleGuidePage />}
-        {view === 'roadmap' && <RoadmapPage />}
-        {view === 'custom-criteria' && <CustomCriteriaPage />}
-      </div>
+    <div className="app">
+      <header className="app-header">
+        <div className="app-header__logo">
+          <h1>VPAT Creator</h1>
+          <span className="app-header__version">v1.0</span>
+        </div>
+        <nav className="app-header__nav">
+          <button 
+            className={`nav-button ${view === 'testing' ? 'active' : ''}`}
+            onClick={() => setView('testing')}
+          >
+            📊 Audit
+          </button>
+          <button 
+            className={`nav-button ${view === 'templates' ? 'active' : ''}`}
+            onClick={() => setView('templates')}
+          >
+            📝 Templates
+          </button>
+          <button 
+            className="nav-button"
+            onClick={() => setShowHelp(true)}
+            aria-label="Open Help Center"
+          >
+            ❓ Help
+          </button>
+        </nav>
+      </header>
+
+      <main className="app-main">
+        {view === 'testing' ? (
+          <TestingWorkflow activeTemplate={activeTemplate} />
+        ) : (
+          <TemplateLibrary 
+            onEdit={handleEditTemplate}
+            onCreate={handleCreateTemplate}
+            onApply={handleApplyTemplate}
+            onClose={() => setView('testing')}
+          />
+        )}
+      </main>
+
+      {(editingTemplate || isCreatingTemplate) && (
+        <TemplateEditor
+          template={editingTemplate}
+          onSave={handleSaveTemplate}
+          onCancel={() => {
+            setEditingTemplate(undefined);
+            setIsCreatingTemplate(false);
+          }}
+        />
+      )}
+
+      {showHelp && (
+        <HelpCenter onClose={() => setShowHelp(false)} />
+      )}
     </div>
   );
 }

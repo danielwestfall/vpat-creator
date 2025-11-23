@@ -563,6 +563,30 @@
   color: var(--color-text-muted);
 }
 
+.keyboard-hint {
+  margin-left: auto;
+  font-size: 0.75rem;
+  color: var(--color-primary);
+  background-color: var(--color-primary-light, #eef2ff);
+  padding: 2px 8px;
+  border-radius: 12px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid transparent;
+  transition: all 0.2s;
+}
+
+.keyboard-hint:hover {
+  background-color: var(--color-primary-light-hover, #e0e7ff);
+  border-color: var(--color-primary-light, #c7d2fe);
+}
+
+.keyboard-hint:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
 /* Responsive Design */
 @media (max-width: 1024px) {
   .workflow-content {

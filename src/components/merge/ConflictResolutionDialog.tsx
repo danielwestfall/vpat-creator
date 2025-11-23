@@ -38,7 +38,18 @@ export function ConflictResolutionDialog({
 
   return (
     <div className="conflict-resolution-dialog">
-      <div className="conflict-resolution-dialog__overlay" onClick={onCancel} />
+      <div 
+        className="conflict-resolution-dialog__overlay" 
+        onClick={onCancel}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            onCancel();
+          }
+        }}
+        aria-label="Close dialog"
+      />
 
       <div 
         className="conflict-resolution-dialog__content" 

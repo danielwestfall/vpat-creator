@@ -14,10 +14,11 @@ import './TemplateLibrary.css';
 interface TemplateLibraryProps {
   onEdit: (template: VPATTemplate) => void;
   onCreate: () => void;
+  onApply: (template: VPATTemplate) => void;
   onClose: () => void;
 }
 
-export function TemplateLibrary({ onEdit, onCreate, onClose }: TemplateLibraryProps) {
+export function TemplateLibrary({ onEdit, onCreate, onApply, onClose }: TemplateLibraryProps) {
   const [templates, setTemplates] = useState<VPATTemplate[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);

@@ -1,6 +1,10 @@
+import { useState } from 'react';
+import { Button } from '../common/Button';
+import { toast } from '../../store/toast-store';
+import { generateVPATPDF, downloadPDF } from '../../services/pdf-export-service';
+import type { Project, Component, TestResult, Screenshot } from '../../models/types';
 import type { VPATTemplate } from '../../models/template-types';
-
-// ... (keep existing imports)
+import './PDFExportDialog.css';
 
 export interface PDFExportDialogProps {
   project: Project;
@@ -19,14 +23,20 @@ export function PDFExportDialog({
   template,
   onClose,
 }: PDFExportDialogProps) {
-  // ... (keep existing state)
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [options, setOptions] = useState({
+    format: '2.4' as '2.4' | '2.5-international',
+    tone: 'formal' as 'formal' | 'friendly',
+    includeExecutiveSummary: true,
+    includeScreenshots: true,
+  });
 
   const handleGenerate = async () => {
     try {
       setIsGenerating(true);
       toast.info('Generating PDF...');
 
-      const pdfBlob = await generateVPATPDF(project, components, results, screenshots, options, template);
+      const pdfBlob = await generateVPATPDF(project, results, screenshots, options, template);
 
       const filename = `VPAT_${project.name.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
       downloadPDF(pdfBlob, filename);
@@ -43,7 +53,18 @@ export function PDFExportDialog({
 
   return (
     <div className="pdf-export-dialog">
-      <div className="pdf-export-dialog__overlay" onClick={onClose} />
+      <div 
+        className="pdf-export-dialog__overlay" 
+        onClick={onClose}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            onClose();
+          }
+        }}
+        aria-label="Close dialog"
+      />
 
       <div className="pdf-export-dialog__content" role="dialog" aria-modal="true" aria-labelledby="pdf-export-title">
         <div className="pdf-export-dialog__header">
@@ -128,6 +149,9 @@ export function PDFExportDialog({
           <div className="pdf-export-info">
             <p className="pdf-export-info__text">
               <strong>Project:</strong> {project.name}
+            </p>
+            <p className="pdf-export-info__text">
+              <strong>Template:</strong> {template ? template.name : 'Default (Standard)'}
             </p>
             <p className="pdf-export-info__text">
               <strong>Criteria Tested:</strong> {results.length}

@@ -208,12 +208,15 @@ export const TeamManagement: React.FC<TeamManagementProps> = ({ onClose, onUpdat
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Avatar Color</label>
-                <div className="flex gap-2">
+                <span id="avatar-color-label" className="block text-sm font-medium text-gray-700 mb-2">Avatar Color</span>
+                <div className="flex gap-2" role="radiogroup" aria-labelledby="avatar-color-label">
                   {COLORS.map(c => (
                     <button
                       key={c}
                       type="button"
+                      role="radio"
+                      aria-checked={color === c}
+                      aria-label={`Color ${c}`}
                       className={`w-8 h-8 rounded-full transition-transform ${color === c ? 'ring-2 ring-offset-2 ring-gray-400 scale-110' : 'hover:scale-110'}`}
                       style={{ backgroundColor: c }}
                       onClick={() => setColor(c)}

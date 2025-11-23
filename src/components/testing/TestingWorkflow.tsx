@@ -1,12 +1,18 @@
 import React from 'react';
 import { testingScheduleService } from '../../services/testing-schedule-service';
 import { standardsMappingService } from '../../services/standards-mapping-service';
+import { toast } from '../../store/toast-store';
 import { Button, Input, Select, Checkbox } from '../common';
 import { AuditScopeConfig, type AuditScope } from './AuditScopeConfig';
 import { ComponentInfo } from './ComponentInfo';
 import { ScreenshotManager } from './ScreenshotManager';
 import { PDFExportDialog } from '../export/PDFExportDialog';
 import { BugReportGenerator } from '../export/BugReportGenerator';
+import { EmailDialog } from '../export/EmailDialog';
+import { ComparisonDialog } from '../export/ComparisonDialog';
+import { VersionHistoryDialog } from '../settings/VersionHistoryDialog';
+import { BatchImportDialog } from '../export/BatchImportDialog';
+import { ExternalImportDialog } from '../export/ExternalImportDialog';
 import { 
   addScreenshot, 
   getScreenshotsByTestResult, 
@@ -16,7 +22,8 @@ import {
   getAllTestResults,
   saveCurrentProject,
   getCurrentProject,
-  clearCurrentAudit
+  clearCurrentAudit,
+  bulkSaveTestResults
 } from '../../services/database';
 import { ComponentTestingView } from './ComponentTestingView';
 import { TeamManagement } from '../settings/TeamManagement';
@@ -26,6 +33,12 @@ import { mergeAudits, applyMergeResolutions, type MergeResult } from '../../serv
 import type { TestingScheduleItem, ComponentCategory } from '../../utils/testing-schedule-generator';
 import type { ConformanceStatus, Screenshot, Project, Component, TestResult as DBTestResult, TeamMember } from '../../models/types';
 import { getTeamMembers } from '../../services/database';
+import { ShortcutSettings, DEFAULT_SHORTCUTS, type ShortcutConfig } from '../settings/ShortcutSettings';
+import { AutomatedScanDialog } from './AutomatedScanDialog';
+import { IssueTrackerSettings } from '../settings/IssueTrackerSettings';
+import type { MappedResult } from '../../services/axe-service';
+import { processImage } from '../../utils/image-processing';
+import { csvExportService } from '../../services/csv-export-service';
 import './TestingWorkflow.css';
 
 // UI-level test result (used in component state)
@@ -48,6 +61,7 @@ interface UITestResult {
 // Helper functions to convert between UI and DB test results
 const uiResultToDbResult = (uiResult: UITestResult, scLevel: string): DBTestResult => ({
   id: uiResult.scId,
+  projectId: 'current-audit',
   successCriterionId: uiResult.scId,
   level: scLevel as 'A' | 'AA' | 'AAA',
   conformance: uiResult.status === 'Not Tested' ? 'Not Applicable' : uiResult.status,
@@ -97,10 +111,9 @@ export const TestingWorkflow: React.FC<TestingWorkflowProps> = ({ activeTemplate
 
   // Use template columns if available
   const templateColumns = React.useMemo(() => {
-    if (!activeTemplate?.columns) return [];
-    return activeTemplate.columns
-      .filter(col => col.enabled)
-      .map(col => ({ id: col.id, label: col.label }));
+    if (!activeTemplate?.columns?.customColumns) return [];
+    return activeTemplate.columns.customColumns
+      .map(col => ({ id: col.id, label: col.name }));
   }, [activeTemplate]);
   const [currentIndex, setCurrentIndex] = React.useState(0);
   const [results, setResults] = React.useState<Map<string, UITestResult>>(new Map());
@@ -122,6 +135,11 @@ export const TestingWorkflow: React.FC<TestingWorkflowProps> = ({ activeTemplate
   const [screenshots, setScreenshots] = React.useState<Screenshot[]>([]);
   const [showPDFDialog, setShowPDFDialog] = React.useState(false);
   const [showBugDialog, setShowBugDialog] = React.useState(false);
+  const [showEmailDialog, setShowEmailDialog] = React.useState(false);
+  const [showComparisonDialog, setShowComparisonDialog] = React.useState(false);
+  const [showHistoryDialog, setShowHistoryDialog] = React.useState(false);
+  const [showBatchImportDialog, setShowBatchImportDialog] = React.useState(false);
+  const [showExternalImportDialog, setShowExternalImportDialog] = React.useState(false);
 
   // Store both schedules
   const [componentSchedule, setComponentSchedule] = React.useState<ComponentCategory[]>([]);
@@ -134,6 +152,7 @@ export const TestingWorkflow: React.FC<TestingWorkflowProps> = ({ activeTemplate
   const [teamMembers, setTeamMembers] = React.useState<TeamMember[]>([]);
   const [assignedTo, setAssignedTo] = React.useState<string>('');
   const [filterAssignedToMe, setFilterAssignedToMe] = React.useState(false);
+  const [filterUntestedOnly, setFilterUntestedOnly] = React.useState(false);
   const [currentUser, setCurrentUser] = React.useState<string>(''); // ID of current user for filtering
 
   // Share
@@ -143,50 +162,108 @@ export const TestingWorkflow: React.FC<TestingWorkflowProps> = ({ activeTemplate
   const [showMergeDialog, setShowMergeDialog] = React.useState(false);
   const [mergeResult, setMergeResult] = React.useState<MergeResult | null>(null);
 
-  // Load saved state on mount
+  // Keyboard Shortcuts
+  const [showShortcutSettings, setShowShortcutSettings] = React.useState(false);
+  const [shortcutConfig, setShortcutConfig] = React.useState<ShortcutConfig>(DEFAULT_SHORTCUTS);
+
+  // Automated Scan
+  const [showAutoScanDialog, setShowAutoScanDialog] = React.useState(false);
+
+  // Issue Tracker
+  const [showIssueTrackerSettings, setShowIssueTrackerSettings] = React.useState(false);
+
+  // Enhanced Navigation (Phase 3)
+  const [searchQuery, setSearchQuery] = React.useState('');
+  const [groupBy, setGroupBy] = React.useState<'none' | 'status' | 'level'>('none');
+  const [expandedGroups, setExpandedGroups] = React.useState<Set<string>>(new Set(['A', 'AA', 'AAA', 'Not Tested', 'Supports', 'Partially Supports', 'Does Not Support', 'Not Applicable']));
+
+  const toggleGroup = (group: string) => {
+    const newExpanded = new Set(expandedGroups);
+    if (newExpanded.has(group)) {
+      newExpanded.delete(group);
+    } else {
+      newExpanded.add(group);
+    }
+    setExpandedGroups(newExpanded);
+  };
+
+  // Load shortcut settings
   React.useEffect(() => {
-    const loadSavedState = async () => {
+    const savedConfig = localStorage.getItem('vpat_shortcut_config');
+    if (savedConfig) {
       try {
-        setIsLoading(true);
-        
-        // 1. Try to load saved project/scope
-        const savedProject = await getCurrentProject();
-        
-        if (savedProject) {
-          // We need to regenerate the schedule to match the saved scope
-          // Since we don't have the exact scope config saved in the Project model (it's a bit lossy),
-          // we might need to ask the user to confirm scope if it's missing, OR we update Project model to store it.
-          // A simpler approach for now: If we have saved results, we probably have a scope.
-          
-          // Let's check localStorage for the exact scope config to be safe
-          const storedScope = localStorage.getItem('vpat_current_scope');
-          if (storedScope) {
-             const parsedScope = JSON.parse(storedScope);
-             handleScopeConfirmed(parsedScope, false); // false = don't save again, just load
-          }
-          
-          // 2. Load saved test results
-          const savedResults = await getAllTestResults();
-          if (savedResults.length > 0) {
-            const resultsMap = new Map<string, UITestResult>();
-            savedResults.forEach(r => {
-              // Convert DB result to UI result
-              resultsMap.set(r.successCriterionId, dbResultToUiResult(r));
-            });
-            setResults(resultsMap);
-          }
+        setShortcutConfig(JSON.parse(savedConfig));
+      } catch (e) {
+        console.error('Failed to parse shortcut config', e);
+      }
+    }
+  }, []);
+
+  const handleSaveShortcutConfig = (config: ShortcutConfig) => {
+    setShortcutConfig(config);
+    localStorage.setItem('vpat_shortcut_config', JSON.stringify(config));
+    setShowShortcutSettings(false);
+    toast.success('Shortcut settings saved');
+  };
+
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Allow Ctrl+S/Cmd+S anywhere
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        handleSaveResult();
+        return;
+      }
+
+      // Help Shortcut (?) - Always active unless in input
+      if (e.key === '?' && !['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement).tagName)) {
+        e.preventDefault();
+        setShowShortcutSettings(true);
+        return;
+      }
+
+      // If shortcuts are disabled, stop here (except save and help)
+      if (!shortcutConfig.enabled) return;
+
+      // Ignore other shortcuts if user is typing in an input or textarea
+      if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement).tagName)) {
+        return;
+      }
+
+      // Navigation
+      if (e.altKey) {
+        if (e.key === shortcutConfig.next) {
+          e.preventDefault();
+          goToNext();
+          return;
         }
-      } catch (error) {
-        console.error('Failed to load saved state:', error);
-      } finally {
-        setIsLoading(false);
+        if (e.key === shortcutConfig.previous) {
+          e.preventDefault();
+          goToPrevious();
+          return;
+        }
+
+        // Status Shortcuts
+        switch (e.key.toLowerCase()) {
+          case shortcutConfig.pass:
+            e.preventDefault();
+            setStatus('Supports');
+            break;
+          case shortcutConfig.fail:
+            e.preventDefault();
+            setStatus('Does Not Support');
+            break;
+          case shortcutConfig.na:
+            e.preventDefault();
+            setStatus('Not Applicable');
+            break;
+        }
       }
     };
-    
-    loadSavedState();
-    loadTeamMembers();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }); // Re-bind on every render to capture latest state closures
 
   const loadTeamMembers = async () => {
     try {
@@ -236,7 +313,6 @@ export const TestingWorkflow: React.FC<TestingWorkflowProps> = ({ activeTemplate
       // We need to pass the scope to prepareProjectData, but it's defined outside
       // Let's move prepareProjectData logic here or pass it
       // For now, we can just use the scope object we have since prepareProjectData relies on state that might not be set yet
-      
       const project: Project = {
         id: 'current-audit',
         name: scope.pageTitle,
@@ -275,6 +351,46 @@ export const TestingWorkflow: React.FC<TestingWorkflowProps> = ({ activeTemplate
     }
   }, []);
 
+  const loadSavedState = React.useCallback(async () => {
+    try {
+      setIsLoading(true);
+      
+      // 1. Try to load saved project/scope
+      const savedProject = await getCurrentProject();
+      
+      if (savedProject) {
+        // Let's check localStorage for the exact scope config to be safe
+        const storedScope = localStorage.getItem('vpat_current_scope');
+        if (storedScope) {
+           const parsedScope = JSON.parse(storedScope);
+           handleScopeConfirmed(parsedScope, false); // false = don't save again, just load
+        }
+        
+        // 2. Load saved test results
+        const savedResults = await getAllTestResults();
+        if (savedResults.length > 0) {
+          const resultsMap = new Map<string, UITestResult>();
+          savedResults.forEach(r => {
+            // Convert DB result to UI result
+            resultsMap.set(r.successCriterionId, dbResultToUiResult(r));
+          });
+          setResults(resultsMap);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load saved state:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [handleScopeConfirmed]);
+
+  // Load saved state on mount
+  React.useEffect(() => {
+    loadSavedState();
+    loadTeamMembers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleClearAudit = async () => {
     if (window.confirm('Are you sure you want to clear the current audit? This will delete all progress and cannot be undone.')) {
       await clearCurrentAudit();
@@ -285,14 +401,8 @@ export const TestingWorkflow: React.FC<TestingWorkflowProps> = ({ activeTemplate
       setCurrentIndex(0);
     }
   };
+  
 
-  // Show scope config if not set yet
-  if (!auditScope) {
-    if (isLoading) {
-      return <div className="workflow-loading">Loading saved audit...</div>;
-    }
-    return <AuditScopeConfig onScopeConfirmed={handleScopeConfirmed} />;
-  }
 
   const currentSC = schedule[currentIndex];
   const progress = schedule.length > 0 ? Math.round((results.size / schedule.length) * 100) : 0;
@@ -334,6 +444,96 @@ export const TestingWorkflow: React.FC<TestingWorkflowProps> = ({ activeTemplate
     } else {
       setScheduleView('sc-based');
       setSchedule(scSchedule);
+    }
+  };
+
+  const handleMarkRemainingNA = async () => {
+    if (!window.confirm('Mark all remaining untested items as "Not Applicable"?')) return;
+    
+    const newResults = new Map(results);
+    const resultsToSave: DBTestResult[] = [];
+    let count = 0;
+    
+    schedule.forEach(sc => {
+      if (!newResults.has(sc.id) || newResults.get(sc.id)?.status === 'Not Tested') {
+        const newResult: UITestResult = {
+          scId: sc.id,
+          status: 'Not Applicable',
+          notes: 'Marked as N/A via Quick Action',
+          testedBy: 'User',
+          testedDate: new Date(),
+          techniquesUsed: [],
+          failuresFound: [],
+          customTechniques: [],
+          toolsUsed: '',
+          screenshots: [],
+          needsRecheck: false,
+          customColumnValues: {},
+          assignedTo: assignedTo || undefined
+        };
+        
+        newResults.set(sc.id, newResult);
+        resultsToSave.push(uiResultToDbResult(newResult, sc.scLevel));
+        count++;
+      }
+    });
+    
+    if (count > 0) {
+      setResults(newResults);
+      await bulkSaveTestResults(resultsToSave);
+      toast.success(`Marked ${count} items as Not Applicable`);
+      
+      // If current item was updated, reload it
+      if (currentSC && resultsToSave.some(r => r.id === currentSC.id)) {
+        loadExistingResult(currentSC);
+      }
+    } else {
+      toast.info('No untested items found');
+    }
+  };
+
+  const handleMarkRemainingSupports = async () => {
+    if (!window.confirm('Mark all remaining untested items as "Supports"?')) return;
+    
+    const newResults = new Map(results);
+    const resultsToSave: DBTestResult[] = [];
+    let count = 0;
+    
+    schedule.forEach(sc => {
+      if (!newResults.has(sc.id) || newResults.get(sc.id)?.status === 'Not Tested') {
+        const newResult: UITestResult = {
+          scId: sc.id,
+          status: 'Supports',
+          notes: 'Marked as Supports via Quick Action',
+          testedBy: 'User',
+          testedDate: new Date(),
+          techniquesUsed: [],
+          failuresFound: [],
+          customTechniques: [],
+          toolsUsed: '',
+          screenshots: [],
+          needsRecheck: false,
+          customColumnValues: {},
+          assignedTo: assignedTo || undefined
+        };
+        
+        newResults.set(sc.id, newResult);
+        resultsToSave.push(uiResultToDbResult(newResult, sc.scLevel));
+        count++;
+      }
+    });
+    
+    if (count > 0) {
+      setResults(newResults);
+      await bulkSaveTestResults(resultsToSave);
+      toast.success(`Marked ${count} items as Supports`);
+      
+      // If current item was updated, reload it
+      if (currentSC && resultsToSave.some(r => r.id === currentSC.id)) {
+        loadExistingResult(currentSC);
+      }
+    } else {
+      toast.info('No untested items found');
     }
   };
 
@@ -503,7 +703,7 @@ export const TestingWorkflow: React.FC<TestingWorkflowProps> = ({ activeTemplate
   };
 
   // Phase 6: Screenshot Handlers
-  const handleAddScreenshot = async (screenshot: Omit<Screenshot, 'id'>) => {
+  const handleAddScreenshot = React.useCallback(async (screenshot: Omit<Screenshot, 'id'>) => {
     const newScreenshot: Screenshot = {
       ...screenshot,
       id: crypto.randomUUID(),
@@ -511,7 +711,7 @@ export const TestingWorkflow: React.FC<TestingWorkflowProps> = ({ activeTemplate
     await addScreenshot(newScreenshot);
     const updated = await getScreenshotsByTestResult(currentSC.id);
     setScreenshots(updated);
-  };
+  }, [currentSC]);
 
   const handleDeleteScreenshot = async (id: string) => {
     await deleteScreenshot(id);
@@ -525,8 +725,45 @@ export const TestingWorkflow: React.FC<TestingWorkflowProps> = ({ activeTemplate
     setScreenshots(updated);
   };
 
+  // Handle paste events for screenshots
+  React.useEffect(() => {
+    const handlePaste = async (e: ClipboardEvent) => {
+      // Only handle paste if we are in the testing view (not component view)
+      if (scheduleView !== 'sc-based' || !currentSC) return;
+
+      const items = e.clipboardData?.items;
+      if (!items) return;
+
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].type.indexOf('image') !== -1) {
+          const file = items[i].getAsFile();
+          if (file) {
+            try {
+              const processed = await processImage(file);
+              await handleAddScreenshot({
+                testResultId: currentSC.id,
+                componentId: auditScope!.pageTitle,
+                filename: `pasted-image-${Date.now()}.png`,
+                dataUrl: processed.base64Data,
+                caption: '',
+                uploadedDate: new Date(),
+              });
+              toast.success('Screenshot pasted successfully');
+            } catch (error) {
+              console.error('Failed to process pasted image:', error);
+              toast.error('Failed to paste image');
+            }
+          }
+        }
+      }
+    };
+
+    window.addEventListener('paste', handlePaste);
+    return () => window.removeEventListener('paste', handlePaste);
+  }, [currentSC, scheduleView, auditScope, handleAddScreenshot]);
+
   // Phase 6: Data Conversion Helpers
-  const prepareProjectData = (scope: AuditScope = auditScope): Project => ({
+  const prepareProjectData = (scope: AuditScope = auditScope!): Project => ({
     id: 'current-audit', // Use fixed ID for active session
     name: scope.pageTitle,
     description: scope.pageUrl || '',
@@ -562,9 +799,9 @@ export const TestingWorkflow: React.FC<TestingWorkflowProps> = ({ activeTemplate
 
   const prepareComponentData = (): Component => ({
     id: crypto.randomUUID(),
-    name: auditScope.pageTitle,
+    name: auditScope!.pageTitle,
     type: 'component',
-    description: auditScope.pageUrl || '',
+    description: auditScope!.pageUrl || '',
     testDate: new Date(),
     version: '1.0',
     results: convertToTestResults(),
@@ -611,6 +848,7 @@ export const TestingWorkflow: React.FC<TestingWorkflowProps> = ({ activeTemplate
   };
 
   const exportResults = () => {
+    if (!auditScope) return;
     // Prepare WCAG results for mapping
     const wcagResultsMap = new Map(
       Array.from(results.entries()).map(([id, result]) => {
@@ -701,6 +939,15 @@ export const TestingWorkflow: React.FC<TestingWorkflowProps> = ({ activeTemplate
     alert(message);
   };
 
+  const handleExportCSV = () => {
+    if (!auditScope) return;
+    const csv = csvExportService.generateCSV(convertToTestResults(), schedule);
+    const sanitizedTitle = auditScope.pageTitle.replace(/[^a-z0-9]/gi, '-').toLowerCase();
+    const dateStr = new Date().toISOString().split('T')[0];
+    csvExportService.downloadCSV(csv, `vpat-${sanitizedTitle}-${dateStr}.csv`);
+    toast.success('CSV export downloaded');
+  };
+
   const handleImportResults = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -722,7 +969,7 @@ export const TestingWorkflow: React.FC<TestingWorkflowProps> = ({ activeTemplate
         // Check if this is a completed audit (all criteria tested)
         const totalCriteria = importedData.wcagResults.length;
         const testedCriteria = importedData.wcagResults.filter(
-          (r: any) => r.status !== 'Not Tested'
+          (r: { status: string }) => r.status !== 'Not Tested'
         ).length;
         const isComplete = testedCriteria === totalCriteria && totalCriteria > 0;
 
@@ -797,14 +1044,14 @@ export const TestingWorkflow: React.FC<TestingWorkflowProps> = ({ activeTemplate
         
         // Convert imported results to TestResult format
         const incomingResults: DBTestResult[] = [];
-        importedData.wcagResults.forEach((result: any) => {
+        importedData.wcagResults.forEach((result: { scNumber: string; status: string; notes: string; toolsUsed?: string; customColumnValues?: Record<string, string>; testedBy?: string; testedDate: string; screenshots?: string[]; assignedTo?: string }) => {
           const sc = schedule.find(s => s.scNumber === result.scNumber);
           if (sc) {
             incomingResults.push({
               id: sc.id,
               successCriterionId: sc.id,
               level: sc.scLevel as 'A' | 'AA' | 'AAA',
-              conformance: result.status === 'Not Tested' ? 'Not Applicable' : result.status,
+              conformance: result.status === 'Not Tested' ? 'Not Applicable' : (result.status as ConformanceStatus),
               observations: result.notes,
               barriers: [],
               testingMethod: {
@@ -886,6 +1133,151 @@ export const TestingWorkflow: React.FC<TestingWorkflowProps> = ({ activeTemplate
     alert(message);
   };
 
+  const handleApplyAutoScanResults = (mappedResults: MappedResult[]) => {
+    const newResults = new Map(results);
+
+
+    mappedResults.forEach((result) => {
+      // Find the SC ID for this SC Number
+      const scId = scLookup.get(result.scNumber);
+      if (!scId) return;
+
+      // Get existing result or create new one
+      const existing = newResults.get(scId);
+      const currentNotes = existing?.notes || '';
+      
+      // Append automated finding to notes
+      const newNotes = currentNotes 
+        ? `${currentNotes}\n\n[Automated Scan]: ${result.reason}`
+        : `[Automated Scan]: ${result.reason}`;
+
+      // Update result
+      newResults.set(scId, {
+        scId,
+        status: result.status, // 'Does Not Support'
+        notes: newNotes,
+        testedBy: 'Automated Scan',
+        testedDate: new Date(),
+        techniquesUsed: existing?.techniquesUsed || [],
+        failuresFound: existing?.failuresFound || [],
+        customTechniques: existing?.customTechniques || [],
+        toolsUsed: 'axe-core',
+        screenshots: existing?.screenshots || [],
+        needsRecheck: true, // Flag for manual review
+        customColumnValues: existing?.customColumnValues || {},
+        assignedTo: existing?.assignedTo,
+      });
+      
+
+    });
+
+    setResults(newResults);
+    
+    // If we updated the current SC, refresh the form
+    if (currentSC && newResults.has(currentSC.id)) {
+      loadExistingResult(currentSC);
+    }
+  };
+
+  const handleBatchImport = async (importedResults: DBTestResult[]) => {
+    const newResults = new Map(results);
+    let importCount = 0;
+    
+    importedResults.forEach(dbResult => {
+      // We need to ensure the result corresponds to a valid SC in our schedule
+      // The import service tries to match by ID, but let's double check
+      if (schedule.some(s => s.id === dbResult.successCriterionId)) {
+         newResults.set(dbResult.successCriterionId, dbResultToUiResult(dbResult));
+         importCount++;
+      }
+    });
+
+    if (importCount > 0) {
+      setResults(newResults);
+      
+      // Save to DB
+      await bulkSaveTestResults(importedResults);
+      
+      toast.success(`Successfully imported ${importCount} results`);
+      
+      // Refresh current view if needed
+      if (currentSC && newResults.has(currentSC.id)) {
+        loadExistingResult(currentSC);
+      }
+    } else {
+      toast.info('No matching criteria found in import');
+    }
+  };
+
+  const handleExternalImport = (mappedResults: MappedResult[]) => {
+    const newResults = new Map(results);
+    let importCount = 0;
+
+    mappedResults.forEach((result) => {
+      // Find the SC ID for this SC Number
+      const scId = scLookup.get(result.scNumber);
+      if (!scId) return;
+
+      // Get existing result or create new one
+      const existing = newResults.get(scId);
+      const currentNotes = existing?.notes || '';
+      
+      // Append automated finding to notes
+      const newNotes = currentNotes 
+        ? `${currentNotes}\n\n[External Tool]: ${result.reason}`
+        : `[External Tool]: ${result.reason}`;
+
+      // Update result
+      newResults.set(scId, {
+        scId,
+        status: result.status, // 'Does Not Support'
+        notes: newNotes,
+        testedBy: 'External Tool',
+        testedDate: new Date(),
+        techniquesUsed: existing?.techniquesUsed || [],
+        failuresFound: existing?.failuresFound || [],
+        customTechniques: existing?.customTechniques || [],
+        toolsUsed: 'axe-core',
+        screenshots: existing?.screenshots || [],
+        needsRecheck: true, // Flag for manual review
+        customColumnValues: existing?.customColumnValues || {},
+        assignedTo: existing?.assignedTo,
+      });
+      importCount++;
+    });
+
+    if (importCount > 0) {
+      setResults(newResults);
+      
+      // Auto-save imported results
+      const resultsToSave: DBTestResult[] = [];
+      newResults.forEach((uiResult, scId) => {
+        const sc = schedule.find(s => s.id === scId);
+        if (sc) {
+          resultsToSave.push(uiResultToDbResult(uiResult, sc.scLevel));
+        }
+      });
+      bulkSaveTestResults(resultsToSave);
+
+      toast.success(`Imported ${importCount} issues from external tool`);
+      
+      // If current item was updated, reload it
+      if (currentSC && newResults.has(currentSC.id)) {
+        loadExistingResult(currentSC);
+      }
+    } else {
+      toast.info('No matching criteria found in import');
+    }
+  };
+
+  // Show scope config if not set yet
+  if (!auditScope) {
+    if (isLoading) {
+      return <div className="workflow-loading">Loading saved audit...</div>;
+    }
+    return <AuditScopeConfig onScopeConfirmed={handleScopeConfirmed} />;
+  }
+
   if (schedule.length === 0) {
     return (
       <div className="workflow-loading">
@@ -944,10 +1336,11 @@ export const TestingWorkflow: React.FC<TestingWorkflowProps> = ({ activeTemplate
               {schedule.map((sc, index) => {
                 const result = results.get(sc.id);
                 return (
-                  <div
+                  <button
                     key={sc.id}
                     className={`result-item result-${result?.status.replace(/\s+/g, '-').toLowerCase() || 'not-tested'}`}
                     onClick={() => jumpToSC(index)}
+                    type="button"
                   >
                     <div className="result-number">{sc.scNumber}</div>
                     <div className="result-title">{sc.scTitle}</div>
@@ -959,7 +1352,7 @@ export const TestingWorkflow: React.FC<TestingWorkflowProps> = ({ activeTemplate
                       {result?.status === 'Not Tested' && '○ Not Tested'}
                       {!result && '○ Not Tested'}
                     </div>
-                  </div>
+                  </button>
                 );
               })}
             </div>
@@ -1012,9 +1405,35 @@ export const TestingWorkflow: React.FC<TestingWorkflowProps> = ({ activeTemplate
 
       <div className="workflow-navigation">
         <div className="nav-actions">
-          <label htmlFor="import-results" className="import-label">
-            <span className="import-button">📂 Resume Audit</span>
-          </label>
+          <Button 
+            onClick={() => setShowAutoScanDialog(true)} 
+            variant="primary" 
+            size="sm"
+            className="bg-indigo-600 hover:bg-indigo-700 text-white"
+          >
+            🤖 Auto Scan
+          </Button>
+          <select 
+            className="px-3 py-1.5 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+            onChange={(e) => {
+              if (e.target.value === 'na') handleMarkRemainingNA();
+              if (e.target.value === 'supports') handleMarkRemainingSupports();
+              e.target.value = ''; // Reset
+            }}
+            defaultValue=""
+            title="Perform bulk actions on remaining items"
+          >
+            <option value="" disabled>⚡ Quick Actions</option>
+            <option value="na">Mark Remaining N/A</option>
+            <option value="supports">Mark Remaining Supports</option>
+          </select>
+          <Button 
+            onClick={() => document.getElementById('import-results')?.click()} 
+            variant="secondary" 
+            size="sm"
+          >
+            📂 Resume Audit
+          </Button>
           <input
             id="import-results"
             type="file"
@@ -1055,6 +1474,9 @@ export const TestingWorkflow: React.FC<TestingWorkflowProps> = ({ activeTemplate
           <Button onClick={() => setShowPDFDialog(true)} variant="primary" size="sm">
             📄 Export PDF
           </Button>
+          <Button onClick={() => setShowEmailDialog(true)} variant="secondary" size="sm">
+            📧 Email
+          </Button>
           <Button 
             onClick={() => setShowShareDialog(true)} 
             variant="primary" 
@@ -1072,14 +1494,39 @@ export const TestingWorkflow: React.FC<TestingWorkflowProps> = ({ activeTemplate
           >
             🐛 Bugs ({getFailureCount()})
           </Button>
+          <Button 
+            onClick={() => setShowIssueTrackerSettings(true)} 
+            variant="secondary" 
+            size="sm"
+            title="Configure Issue Tracker (GitHub/Asana)"
+          >
+            ⚙️ Tracker
+          </Button>
+          <Button onClick={handleExportCSV} variant="secondary" size="sm">
+            📊 Export CSV
+          </Button>
+          <Button onClick={() => setShowComparisonDialog(true)} variant="secondary" size="sm">
+            ⚖️ Compare
+          </Button>
           <Button onClick={exportResults} variant="secondary" size="sm">
             💾 Backup JSON
           </Button>
-          <label htmlFor="merge-upload" style={{ display: 'inline-block', cursor: 'pointer' }}>
-            <Button variant="secondary" size="sm">
-              🔀 Import & Merge
-            </Button>
-          </label>
+          <Button onClick={() => setShowHistoryDialog(true)} variant="secondary" size="sm">
+            🕒 History
+          </Button>
+          <Button onClick={() => setShowBatchImportDialog(true)} variant="secondary" size="sm">
+            📥 Batch Import
+          </Button>
+          <Button onClick={() => setShowExternalImportDialog(true)} variant="secondary" size="sm">
+            🤖 Tool Import
+          </Button>
+          <Button 
+            onClick={() => document.getElementById('merge-upload')?.click()} 
+            variant="secondary" 
+            size="sm"
+          >
+            🔀 Import & Merge
+          </Button>
           <input
             id="merge-upload"
             type="file"
@@ -1142,7 +1589,17 @@ export const TestingWorkflow: React.FC<TestingWorkflowProps> = ({ activeTemplate
                   </Button>
                 </div>
                 
-                <div className="flex gap-2 mb-2">
+                <div className="mb-2">
+                  <Input
+                    placeholder="🔍 Search criteria..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    fullWidth
+                    className="text-sm"
+                  />
+                </div>
+
+                <div className="flex gap-2 mb-2 flex-wrap">
                   <Button 
                     onClick={() => setShowComponentInfo(true)} 
                     size="sm" 
@@ -1153,7 +1610,7 @@ export const TestingWorkflow: React.FC<TestingWorkflowProps> = ({ activeTemplate
                     📚 Guide
                   </Button>
                   {teamMembers.length > 0 && (
-                    <label className="flex items-center gap-2 text-sm cursor-pointer px-2 py-1 rounded hover:bg-gray-100 border border-transparent hover:border-gray-200">
+                    <label className="flex items-center gap-2 text-sm cursor-pointer px-2 py-1 rounded hover:bg-gray-100 border border-transparent hover:border-gray-200" title="Show only tasks assigned to me">
                       <input 
                         type="checkbox" 
                         checked={filterAssignedToMe} 
@@ -1163,6 +1620,27 @@ export const TestingWorkflow: React.FC<TestingWorkflowProps> = ({ activeTemplate
                       <span>My Tasks</span>
                     </label>
                   )}
+                  <label className="flex items-center gap-2 text-sm cursor-pointer px-2 py-1 rounded hover:bg-gray-100 border border-transparent hover:border-gray-200" title="Show only untested items">
+                    <input 
+                      type="checkbox" 
+                      checked={filterUntestedOnly} 
+                      onChange={(e) => setFilterUntestedOnly(e.target.checked)}
+                      className="rounded text-indigo-600"
+                    />
+                    <span>Untested</span>
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-600">Group by:</span>
+                    <select 
+                      value={groupBy} 
+                      onChange={(e) => setGroupBy(e.target.value as 'none' | 'status' | 'level')}
+                      className="text-sm border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 py-1 pl-2 pr-8"
+                    >
+                      <option value="none">None</option>
+                      <option value="status">Status</option>
+                      <option value="level">Level</option>
+                    </select>
+                  </div>
                 </div>
               </div>
               {results.size > 0 && (
@@ -1171,43 +1649,149 @@ export const TestingWorkflow: React.FC<TestingWorkflowProps> = ({ activeTemplate
                 </div>
               )}
               <div className="sc-list">
-                {schedule
-                  .filter(sc => {
-                    if (!filterAssignedToMe) return true;
+                {(() => {
+                  const filteredSchedule = schedule.filter(sc => {
                     const result = results.get(sc.id);
-                    return result?.assignedTo === currentUser;
-                  })
-                  .map((sc, index) => {
+                    if (filterAssignedToMe && result?.assignedTo !== currentUser) return false;
+                    if (filterUntestedOnly && result && result.status !== 'Not Tested') return false;
+                    
+                    if (searchQuery) {
+                      const query = searchQuery.toLowerCase();
+                      return sc.scNumber.toLowerCase().includes(query) || 
+                             sc.scTitle.toLowerCase().includes(query);
+                    }
+                    return true;
+                  });
+
+                  if (filteredSchedule.length === 0) {
+                    return <div className="p-4 text-center text-gray-500">No matching criteria found</div>;
+                  }
+
+                  if (groupBy !== 'none') {
+                    const groups: Record<string, typeof schedule> = {};
+                    
+                    // Initialize groups based on type to ensure order
+                    if (groupBy === 'status') {
+                       groups['Not Tested'] = [];
+                       groups['Supports'] = [];
+                       groups['Partially Supports'] = [];
+                       groups['Does Not Support'] = [];
+                       groups['Not Applicable'] = [];
+                    } else if (groupBy === 'level') {
+                       groups['A'] = [];
+                       groups['AA'] = [];
+                       groups['AAA'] = [];
+                    }
+
+                    filteredSchedule.forEach(sc => {
+                      let key = '';
+                      if (groupBy === 'status') {
+                        key = results.get(sc.id)?.status || 'Not Tested';
+                      } else {
+                        key = sc.scLevel;
+                      }
+                      
+                      // Fallback for any other status/level
+                      if (!groups[key]) groups[key] = [];
+                      groups[key].push(sc);
+                    });
+
+                    return Object.entries(groups).map(([groupName, items]) => {
+                      if (items.length === 0) return null;
+                      
+                      const isExpanded = expandedGroups.has(groupName);
+                      
+                      const statusColors: Record<string, string> = {
+                        'Not Tested': 'bg-gray-100 text-gray-700',
+                        'Supports': 'bg-green-100 text-green-800',
+                        'Partially Supports': 'bg-yellow-100 text-yellow-800',
+                        'Does Not Support': 'bg-red-100 text-red-800',
+                        'Not Applicable': 'bg-gray-100 text-gray-500',
+                        'A': 'bg-blue-100 text-blue-800',
+                        'AA': 'bg-indigo-100 text-indigo-800',
+                        'AAA': 'bg-purple-100 text-purple-800',
+                      };
+
+                      return (
+                        <div key={groupName} className="mb-4">
+                          <button 
+                            className={`w-full flex items-center justify-between px-3 py-1.5 text-xs font-semibold uppercase tracking-wider sticky top-0 z-10 ${statusColors[groupName] || 'bg-gray-100'}`}
+                            onClick={() => toggleGroup(groupName)}
+                          >
+                            <span>{groupName} ({items.length})</span>
+                            <span>{isExpanded ? '▼' : '▶'}</span>
+                          </button>
+                          
+                          {isExpanded && items.map((sc) => {
+                            const index = schedule.findIndex(s => s.id === sc.id);
+                            const result = results.get(sc.id);
+                            const assignee = teamMembers.find(m => m.id === result?.assignedTo);
+                            
+                            return (
+                              <button
+                                key={sc.id}
+                                className={`sc-list-item ${index === currentIndex ? 'active' : ''} ${
+                                  results.has(sc.id) ? 'tested' : ''
+                                }`}
+                                onClick={() => jumpToSC(index)}
+                              >
+                                <span className="sc-number">{sc.scNumber}</span>
+                                <div className="flex-1 text-left overflow-hidden">
+                                  <span className="sc-title block truncate">{sc.scTitle}</span>
+                                  {assignee && (
+                                    <span className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
+                                      <span 
+                                        className="w-4 h-4 rounded-full flex items-center justify-center text-[10px] text-white font-bold"
+                                        style={{ backgroundColor: assignee.color }}
+                                      >
+                                        {assignee.initials}
+                                      </span>
+                                      {assignee.name}
+                                    </span>
+                                  )}
+                                </div>
+                                {results.has(sc.id) && <span className="sc-check">✓</span>}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      );
+                    });
+                  }
+
+                  return filteredSchedule.map((sc) => {
+                    const index = schedule.findIndex(s => s.id === sc.id);
                     const result = results.get(sc.id);
                     const assignee = teamMembers.find(m => m.id === result?.assignedTo);
                     
                     return (
-                  <button
-                    key={sc.id}
-                    className={`sc-list-item ${index === currentIndex ? 'active' : ''} ${
-                      results.has(sc.id) ? 'tested' : ''
-                    }`}
-                    onClick={() => jumpToSC(index)}
-                  >
-                    <span className="sc-number">{sc.scNumber}</span>
-                    <div className="flex-1 text-left overflow-hidden">
-                      <span className="sc-title block truncate">{sc.scTitle}</span>
-                      {assignee && (
-                        <span className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
-                          <span 
-                            className="w-4 h-4 rounded-full flex items-center justify-center text-[10px] text-white font-bold"
-                            style={{ backgroundColor: assignee.color }}
-                          >
-                            {assignee.initials}
-                          </span>
-                          {assignee.name}
-                        </span>
-                      )}
-                    </div>
-                    {results.has(sc.id) && <span className="sc-check">✓</span>}
-                  </button>
-                );
-              })}
+                      <button
+                        key={sc.id}
+                        className={`sc-list-item ${index === currentIndex ? 'active' : ''} ${
+                          results.has(sc.id) ? 'tested' : ''
+                        }`}
+                        onClick={() => jumpToSC(index)}
+                      >
+                        <span className="sc-number">{sc.scNumber}</span>
+                        <div className="flex-1 text-left overflow-hidden">
+                          <span className="sc-title block truncate">{sc.scTitle}</span>
+                          {assignee && (
+                            <span className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
+                              <span 
+                                className="w-4 h-4 rounded-full flex items-center justify-center text-[10px] text-white font-bold"
+                                style={{ backgroundColor: assignee.color }}
+                              >
+                                {assignee.initials}
+                              </span>
+                              {assignee.name}
+                            </span>
+                          )}
+                        </div>
+                        {results.has(sc.id) && <span className="sc-check">✓</span>}
+                      </button>
+                    );
+                  });
+                })()}
               </div>
             </>
           ) : (
@@ -1279,6 +1863,14 @@ export const TestingWorkflow: React.FC<TestingWorkflowProps> = ({ activeTemplate
               {currentSC.componentsToTest.length > 0 && (
                 <span>🧩 Components: {currentSC.componentsToTest.join(', ')}</span>
               )}
+              <button 
+                className="keyboard-hint" 
+                onClick={() => setShowShortcutSettings(true)}
+                title="Click to configure keyboard shortcuts"
+                aria-label="Configure keyboard shortcuts"
+              >
+                {shortcutConfig.enabled ? '⌨️ Shortcuts Active' : '⌨️ Shortcuts Disabled'}
+              </button>
             </div>
           </div>
 
@@ -1391,6 +1983,16 @@ export const TestingWorkflow: React.FC<TestingWorkflowProps> = ({ activeTemplate
               helperText="Be specific about what was tested and any deviations"
               fullWidth
             />
+            
+            <div className="flex justify-end -mt-2 mb-4">
+               <button 
+                 className="text-xs text-indigo-600 hover:text-indigo-800 flex items-center gap-1 bg-transparent border-none cursor-pointer"
+                 onClick={() => toast.info('You can paste images (Ctrl+V) directly onto this page')}
+                 type="button"
+               >
+                 📋 Paste Image (Ctrl+V) supported
+               </button>
+            </div>
 
             <Input
               label="Testing Tools Used (for this criterion)"
@@ -1459,7 +2061,7 @@ export const TestingWorkflow: React.FC<TestingWorkflowProps> = ({ activeTemplate
             </div>
           </div>
         </section>
-      </main>
+        </main>
       )}
 
       {/* Phase 6: Export Dialogs */}
@@ -1483,6 +2085,65 @@ export const TestingWorkflow: React.FC<TestingWorkflowProps> = ({ activeTemplate
           onClose={() => setShowBugDialog(false)}
         />
       )}
+
+      {showEmailDialog && (
+        <EmailDialog
+          project={prepareProjectData()}
+          results={convertToTestResults()}
+          onClose={() => setShowEmailDialog(false)}
+        />
+      )}
+
+      {showComparisonDialog && (
+        <ComparisonDialog
+          currentProject={prepareProjectData()}
+          currentResults={convertToTestResults()}
+          onClose={() => setShowComparisonDialog(false)}
+        />
+      )}
+
+      {showHistoryDialog && (
+        <VersionHistoryDialog
+          onClose={() => setShowHistoryDialog(false)}
+          onRestore={() => {
+            loadSavedState();
+            setShowHistoryDialog(false);
+          }}
+        />
+      )}
+
+      {showBatchImportDialog && (
+        <BatchImportDialog
+          onClose={() => setShowBatchImportDialog(false)}
+          onImport={handleBatchImport}
+        />
+      )}
+
+      {showExternalImportDialog && (
+        <ExternalImportDialog
+          onClose={() => setShowExternalImportDialog(false)}
+          onImport={handleExternalImport}
+        />
+      )}
+
+      <ShortcutSettings
+        open={showShortcutSettings}
+        onClose={() => setShowShortcutSettings(false)}
+        onSave={handleSaveShortcutConfig}
+        currentConfig={shortcutConfig}
+      />
+
+      <AutomatedScanDialog
+        open={showAutoScanDialog}
+        onClose={() => setShowAutoScanDialog(false)}
+
+        onApplyResults={handleApplyAutoScanResults}
+      />
+
+      <IssueTrackerSettings
+        open={showIssueTrackerSettings}
+        onClose={() => setShowIssueTrackerSettings(false)}
+      />
     </div>
   );
 };

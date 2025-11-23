@@ -63,8 +63,9 @@ export const RoadmapPage: React.FC = () => {
                 onChange={(e) => setNewItem({ ...newItem, targetDate: e.target.value })}
               />
               <div className="select-wrapper">
-                <label>Status</label>
+                <label htmlFor="status-select">Status</label>
                 <select
+                  id="status-select"
                   value={newItem.status}
                   onChange={(e) => setNewItem({ ...newItem, status: e.target.value as any })}
                   className="status-select"
@@ -75,7 +76,9 @@ export const RoadmapPage: React.FC = () => {
                 </select>
               </div>
             </div>
+            <label htmlFor="description-input" className="sr-only">Description</label>
             <textarea
+              id="description-input"
               className="description-input"
               placeholder="Description..."
               value={newItem.description}

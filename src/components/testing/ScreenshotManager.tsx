@@ -21,7 +21,7 @@ export function ScreenshotManager({
   onDelete,
   onUpdateCaption,
 }: ScreenshotManagerProps) {
-  const [previewImage, setPreviewImage] = useState<Screenshot | null>(null);
+  const [previewIndex, setPreviewIndex] = useState<number>(-1);
   const [editingCaption, setEditingCaption] = useState<string | null>(null);
   const [captionText, setCaptionText] = useState('');
 
@@ -48,6 +48,9 @@ export function ScreenshotManager({
       try {
         await onDelete(id);
         toast.success('Screenshot deleted');
+        if (previewIndex !== -1) {
+          setPreviewIndex(-1);
+        }
       } catch (error) {
         toast.error('Failed to delete screenshot');
         console.error('Screenshot delete error:', error);
@@ -72,6 +75,30 @@ export function ScreenshotManager({
     setCaptionText(screenshot.caption || '');
   };
 
+  const openPreview = (index: number) => {
+    setPreviewIndex(index);
+  };
+
+  const closePreview = () => {
+    setPreviewIndex(-1);
+  };
+
+  const nextPreview = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    if (previewIndex < screenshots.length - 1) {
+      setPreviewIndex(previewIndex + 1);
+    }
+  };
+
+  const prevPreview = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    if (previewIndex > 0) {
+      setPreviewIndex(previewIndex - 1);
+    }
+  };
+
+  const currentPreview = previewIndex !== -1 ? screenshots[previewIndex] : null;
+
   return (
     <div className="screenshot-manager">
       <div className="screenshot-manager__header">
@@ -85,23 +112,21 @@ export function ScreenshotManager({
 
       {screenshots.length > 0 && (
         <div className="screenshot-manager__grid">
-          {screenshots.map((screenshot) => (
+          {screenshots.map((screenshot, index) => (
             <div key={screenshot.id} className="screenshot-card">
               <div className="screenshot-card__image-container">
-                <img
-                  src={screenshot.dataUrl}
-                  alt={screenshot.caption || screenshot.filename}
-                  className="screenshot-card__image"
-                  onClick={() => setPreviewImage(screenshot)}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      setPreviewImage(screenshot);
-                    }
-                  }}
-                />
+                <button
+                  type="button"
+                  className="screenshot-card__image-button"
+                  onClick={() => openPreview(index)}
+                  aria-label={`View screenshot: ${screenshot.caption || screenshot.filename}`}
+                >
+                  <img
+                    src={screenshot.dataUrl}
+                    alt=""
+                    className="screenshot-card__image"
+                  />
+                </button>
                 <button
                   className="screenshot-card__delete"
                   onClick={() => handleDelete(screenshot.id)}
@@ -172,18 +197,38 @@ export function ScreenshotManager({
       )}
 
       {/* Preview Modal */}
-      {previewImage && (
+      {currentPreview && (
         <div
           className="screenshot-preview"
-          onClick={() => setPreviewImage(null)}
-          role="dialog"
-          aria-modal="true"
-          aria-label="Screenshot preview"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              closePreview();
+            }
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') {
+              closePreview();
+            }
+            if (e.key === 'ArrowRight') {
+              nextPreview();
+            }
+            if (e.key === 'ArrowLeft') {
+              prevPreview();
+            }
+          }}
+          role="button"
+          tabIndex={0}
+          aria-label="Close preview"
         >
-          <div className="screenshot-preview__content" onClick={(e) => e.stopPropagation()}>
+          <div 
+            className="screenshot-preview__content" 
+            role="dialog"
+            aria-modal="true"
+            aria-label="Screenshot preview"
+          >
             <button
               className="screenshot-preview__close"
-              onClick={() => setPreviewImage(null)}
+              onClick={closePreview}
               aria-label="Close preview"
             >
               <svg
@@ -203,15 +248,44 @@ export function ScreenshotManager({
               </svg>
             </button>
 
+            {previewIndex > 0 && (
+              <button
+                className="screenshot-preview__nav screenshot-preview__nav--prev"
+                onClick={prevPreview}
+                aria-label="Previous screenshot"
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+            )}
+
+            {previewIndex < screenshots.length - 1 && (
+              <button
+                className="screenshot-preview__nav screenshot-preview__nav--next"
+                onClick={nextPreview}
+                aria-label="Next screenshot"
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            )}
+
             <img
-              src={previewImage.dataUrl}
-              alt={previewImage.caption || previewImage.filename}
+              src={currentPreview.dataUrl}
+              alt={currentPreview.caption || currentPreview.filename}
               className="screenshot-preview__image"
             />
 
-            {previewImage.caption && (
-              <p className="screenshot-preview__caption">{previewImage.caption}</p>
-            )}
+            <div className="screenshot-preview__footer">
+              <p className="screenshot-preview__counter">
+                {previewIndex + 1} / {screenshots.length}
+              </p>
+              {currentPreview.caption && (
+                <p className="screenshot-preview__caption">{currentPreview.caption}</p>
+              )}
+            </div>
           </div>
         </div>
       )}

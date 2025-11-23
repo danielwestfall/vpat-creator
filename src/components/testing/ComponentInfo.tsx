@@ -22,7 +22,7 @@ interface ComponentTypeInfo {
   commonIssues: string[];
 }
 
-export const componentTypeInfo: Record<string, ComponentTypeInfo> = {
+const componentTypeInfo: Record<string, ComponentTypeInfo> = {
   'forms': {
     name: 'Forms & Inputs',
     icon: '📝',

@@ -138,7 +138,7 @@ export const AuditScopeConfig: React.FC<AuditScopeConfigProps> = ({ onScopeConfi
 
           <section className="scope-section">
             <h2>WCAG Standard</h2>
-            <div className="radio-group">
+            <div className="radio-group" role="radiogroup" aria-label="WCAG Standard Version">
               <label className={`radio-option ${wcagVersion === '2.1' ? 'selected' : ''}`}>
                 <input
                   type="radio"
@@ -146,6 +146,7 @@ export const AuditScopeConfig: React.FC<AuditScopeConfigProps> = ({ onScopeConfi
                   value="2.1"
                   checked={wcagVersion === '2.1'}
                   onChange={() => setWcagVersion('2.1')}
+                  aria-label="WCAG 2.1"
                 />
                 <div className="radio-content">
                   <strong>WCAG 2.1</strong>
@@ -161,6 +162,7 @@ export const AuditScopeConfig: React.FC<AuditScopeConfigProps> = ({ onScopeConfi
                   value="2.2"
                   checked={wcagVersion === '2.2'}
                   onChange={() => setWcagVersion('2.2')}
+                  aria-label="WCAG 2.2"
                 />
                 <div className="radio-content">
                   <strong>WCAG 2.2</strong>

@@ -77,6 +77,7 @@ export interface TestingMethod {
 
 export interface TestResult {
   id: string;
+  projectId?: string; // ID of the project/snapshot this result belongs to
   successCriterionId: string; // e.g., "1.1.1"
   level: ConformanceLevel;
   conformance: ConformanceStatus;
@@ -98,6 +99,7 @@ export interface TestResult {
 
 export interface Screenshot {
   id: string;
+  projectId?: string; // ID of the project/snapshot this screenshot belongs to
   componentId: string;
   testResultId?: string;
   filename: string;
@@ -234,7 +236,7 @@ export interface TeamMember {
 // PROJECT (Top-level container)
 // ============================================================================
 
-export type ProjectStatus = 'in-progress' | 'completed' | 'archived';
+export type ProjectStatus = 'in-progress' | 'completed' | 'archived' | 'snapshot';
 
 export interface Project {
   id: string;

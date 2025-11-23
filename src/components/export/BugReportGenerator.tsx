@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   extractBugsFromResults,
   exportBugsAsMarkdown,
@@ -6,7 +6,8 @@ import {
   exportBugsAsJSON,
   downloadFile,
 } from '../../services/bug-export-service';
-import type { TestResult, Component, Screenshot, BugReport } from '../../models/types';
+import { issueTrackerService } from '../../services/issue-tracker-service';
+import type { TestResult, Component, Screenshot } from '../../models/types';
 import { Button } from '../common';
 import { toast } from '../../store/toast-store';
 import './BugReportGenerator.css';
@@ -26,13 +27,23 @@ export function BugReportGenerator({
   onClose,
   defaultComponentName,
 }: BugReportGeneratorProps) {
-  const [bugs] = useState<BugReport[]>(() =>
-    extractBugsFromResults(results, components, screenshots, defaultComponentName)
+  const bugs = useMemo(() => 
+    extractBugsFromResults(results, components, screenshots, defaultComponentName),
+    [results, components, screenshots, defaultComponentName]
   );
   const [selectedFormat, setSelectedFormat] = useState<'markdown' | 'csv' | 'json'>('markdown');
   const [severityFilter, setSeverityFilter] = useState<'all' | 'critical' | 'major' | 'minor'>(
     'all'
   );
+  
+  // Issue Tracker State
+  const [trackerConfig, setTrackerConfig] = useState(issueTrackerService.getConfig());
+  const [isExportingToTracker, setIsExportingToTracker] = useState(false);
+  const [exportProgress, setExportProgress] = useState({ current: 0, total: 0 });
+
+  useEffect(() => {
+    setTrackerConfig(issueTrackerService.getConfig());
+  }, []);
 
   const filteredBugs =
     severityFilter === 'all' ? bugs : bugs.filter((b) => b.severity === severityFilter);
@@ -70,13 +81,71 @@ export function BugReportGenerator({
     }
   };
 
+  const handleExportToTracker = async () => {
+    if (!trackerConfig.enabled) return;
+    
+    if (!window.confirm(`Are you sure you want to create ${filteredBugs.length} issues in ${trackerConfig.type === 'github' ? 'GitHub' : trackerConfig.type === 'jira' ? 'Jira' : 'Asana'}?`)) {
+      return;
+    }
+
+    setIsExportingToTracker(true);
+    setExportProgress({ current: 0, total: filteredBugs.length });
+    
+    let successCount = 0;
+    let failCount = 0;
+
+    for (const bug of filteredBugs) {
+      try {
+        await issueTrackerService.createIssue({
+          title: `[Accessibility] ${bug.criterionName} (${bug.criterionNumber})`,
+          description: `
+**Severity:** ${bug.severity}
+**Component:** ${bug.componentName}
+**WCAG Criterion:** ${bug.criterionNumber} (Level ${bug.wcagLevel})
+
+**Description:**
+${bug.description}
+
+**Remediation:**
+${bug.suggestedFix || 'No specific remediation provided.'}
+          `.trim(),
+          labels: ['accessibility', `wcag-${bug.wcagLevel.toLowerCase()}`, `severity-${bug.severity}`]
+        });
+        successCount++;
+      } catch (error) {
+        console.error('Failed to export bug:', error);
+        failCount++;
+      }
+      setExportProgress(prev => ({ ...prev, current: prev.current + 1 }));
+    }
+
+    setIsExportingToTracker(false);
+    
+    if (failCount === 0) {
+      toast.success(`Successfully exported ${successCount} issues to ${trackerConfig.type === 'github' ? 'GitHub' : trackerConfig.type === 'jira' ? 'Jira' : 'Asana'}!`);
+    } else {
+      toast.warning(`Export complete: ${successCount} succeeded, ${failCount} failed.`);
+    }
+  };
+
   const criticalCount = bugs.filter((b) => b.severity === 'critical').length;
   const majorCount = bugs.filter((b) => b.severity === 'major').length;
   const minorCount = bugs.filter((b) => b.severity === 'minor').length;
 
   return (
     <div className="bug-report-generator">
-      <div className="bug-report-generator__overlay" onClick={onClose} />
+      <div 
+        className="bug-report-generator__overlay" 
+        onClick={onClose}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            onClose();
+          }
+        }}
+        aria-label="Close dialog"
+      />
 
       <div
         className="bug-report-generator__content"
@@ -193,6 +262,19 @@ export function BugReportGenerator({
           <Button variant="secondary" onClick={onClose}>
             Cancel
           </Button>
+          {trackerConfig.enabled && (
+            <Button 
+              variant="secondary" 
+              onClick={handleExportToTracker} 
+              disabled={filteredBugs.length === 0 || isExportingToTracker}
+              loading={isExportingToTracker}
+            >
+              {isExportingToTracker 
+                ? `Exporting ${exportProgress.current}/${exportProgress.total}...` 
+                : `Export to ${trackerConfig.type === 'github' ? 'GitHub' : trackerConfig.type === 'jira' ? 'Jira' : 'Asana'}`
+              }
+            </Button>
+          )}
           <Button variant="primary" onClick={handleExport} disabled={filteredBugs.length === 0}>
             Export {filteredBugs.length} Issue{filteredBugs.length !== 1 ? 's' : ''}
           </Button>

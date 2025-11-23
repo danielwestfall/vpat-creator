@@ -168,3 +168,90 @@ The application now supports:
 - Rich educational content for each component type
 
 All features are working, tested, and documented!
+
+## Phase 3: Enhanced Navigation (Completed)
+
+**Request**: "Implement search, filtering, and keyboard shortcuts for faster navigation."
+
+**Implementation**:
+- ✅ **Search**: Added search bar to filter Success Criteria by number or title.
+- ✅ **Filtering**: Added filters for "My Tasks" (assigned to user) and "Untested" items.
+- ✅ **Grouping**: Added "Group by Status" toggle to organize SC list by conformance status.
+- ✅ **Keyboard Shortcuts**: Implemented configurable shortcuts for navigation (Alt+N/P) and status setting (Alt+1/2/3).
+- ✅ **Quick Actions**: Added bulk actions to mark remaining items as "N/A" or "Supports".
+
+**Files Modified**:
+- `TestingWorkflow.tsx`: Added search/filter logic, keyboard listeners, and quick action handlers.
+- `ShortcutSettings.tsx`: Created settings dialog for customizing shortcuts.
+
+## Phase 4: Screenshot Integration (Completed)
+
+**Request**: "Allow pasting images, carousel view, and better management."
+
+**Implementation**:
+- ✅ **Paste Support**: Global `Ctrl+V` listener to paste images directly from clipboard into the current test result.
+- ✅ **Carousel View**: Enhanced `ScreenshotManager` with a modal carousel for viewing images (Next/Prev, Keyboard support).
+- ✅ **Drag & Drop**: Verified existing drag-and-drop functionality.
+- ✅ **Visual Hints**: Added UI hint for "Paste Image (Ctrl+V) supported".
+
+**Files Modified**:
+- `TestingWorkflow.tsx`: Added paste event listener.
+- `ScreenshotManager.tsx`: Implemented carousel modal and navigation logic.
+
+## Phase 5: Reporting & Export (In Progress)
+
+**Request**: "Export data to CSV for external analysis."
+
+**Implementation**:
+- ✅ **CSV Export Service**: Created `CSVExportService` to flatten hierarchical test results into tabular format.
+- ✅ **Export Button**: Added "📊 Export CSV" button to the workflow actions.
+- ✅ **Data Mapping**: Maps all SC fields, including custom columns and notes, to CSV columns.
+
+**Files Created**:
+- `src/services/csv-export-service.ts`
+
+**Files Modified**:
+- `TestingWorkflow.tsx`: Integrated CSV export service.
+
+## Phase 5: Custom Report Templates (Completed)
+
+**Request**: "Allow users to define custom templates for PDF reports."
+
+**Implementation**:
+- ✅ **Template Engine**: Updated `pdf-export-service.ts` to dynamically generate PDFs based on `VPATTemplate` configuration.
+- ✅ **Customization Options**:
+  - **Branding**: Company name, report title, date/page number toggles.
+  - **Styling**: Primary/Secondary colors, font family (Arial, Times, etc.), font size, table styles (bordered, striped).
+  - **Sections**: Toggle Executive Summary, Legal Disclaimer, etc.
+  - **Columns**: Configure which columns to show (including custom columns).
+- ✅ **UI Integration**: `PDFExportDialog` now displays the active template being used.
+- ✅ **Template Management**: Leveraged existing `TemplateLibrary` and `TemplateEditor` for creating and selecting templates.
+
+**Files Modified**:
+- `src/services/pdf-export-service.ts`: Rewrote `generateVPATPDF` to use template settings.
+- `src/components/export/PDFExportDialog.tsx`: Added template information display.
+
+## Phase 6: Data Management (In Progress)
+
+**Request**: "Import results from external tools and spreadsheets."
+
+**Implementation**:
+- ✅ **External Tool Import**: Created `ExternalImportService` to parse JSON exports from tools like `axe-core`.
+  - Maps automated violations to WCAG Success Criteria.
+  - Flags imported items as "Does Not Support" with "External Tool" source.
+  - Sets `needsRecheck` flag for manual verification.
+- ✅ **Batch Import**: Implemented CSV batch import for bulk updating results.
+- ✅ **UI Integration**: Added "🤖 Tool Import" and "📥 Batch Import" dialogs to the workflow.
+
+**Files Created**:
+- `src/services/external-import-service.ts`
+- `src/components/export/ExternalImportDialog.tsx`
+- `src/components/export/ExternalImportDialog.css`
+
+**Files Modified**:
+- `TestingWorkflow.tsx`: Integrated import dialogs and handlers.
+
+## Next Steps
+
+- [ ] **Email Integration**: Send reports directly via email.
+- [ ] **Comparison Reports**: Compare results between two audits.

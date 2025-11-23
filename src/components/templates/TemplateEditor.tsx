@@ -84,7 +84,18 @@ export function TemplateEditor({ template, onSave, onCancel }: TemplateEditorPro
 
   return (
     <div className="template-editor">
-      <div className="template-editor__overlay" onClick={onCancel} />
+      <div 
+        className="template-editor__overlay" 
+        onClick={onCancel}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            onCancel();
+          }
+        }}
+        aria-label="Close dialog"
+      />
 
       <div className="template-editor__content" role="dialog" aria-modal="true">
         <div className="template-editor__header">
@@ -216,9 +227,10 @@ export function TemplateEditor({ template, onSave, onCancel }: TemplateEditorPro
 
               <div className="template-editor__color-inputs">
                 <div className="template-editor__color-field">
-                  <label>Primary Color</label>
+                  <label htmlFor="primary-color-picker">Primary Color</label>
                   <div className="template-editor__color-picker">
                     <input
+                      id="primary-color-picker"
                       type="color"
                       value={formData.styling.primaryColor}
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({
@@ -238,9 +250,10 @@ export function TemplateEditor({ template, onSave, onCancel }: TemplateEditorPro
                 </div>
 
                 <div className="template-editor__color-field">
-                  <label>Secondary Color</label>
+                  <label htmlFor="secondary-color-picker">Secondary Color</label>
                   <div className="template-editor__color-picker">
                     <input
+                      id="secondary-color-picker"
                       type="color"
                       value={formData.styling.secondaryColor}
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({
@@ -277,8 +290,9 @@ export function TemplateEditor({ template, onSave, onCancel }: TemplateEditorPro
               />
 
               <div className="template-editor__font-size">
-                <label>Font Size: {formData.styling.fontSize}pt</label>
+                <label htmlFor="font-size-slider">Font Size: {formData.styling.fontSize}pt</label>
                 <input
+                  id="font-size-slider"
                   type="range"
                   min="9"
                   max="14"

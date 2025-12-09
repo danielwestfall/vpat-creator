@@ -24,11 +24,7 @@ export interface VPATExportOptions {
 function hexToRgb(hex: string): [number, number, number] {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   return result
-    ? [
-        parseInt(result[1], 16),
-        parseInt(result[2], 16),
-        parseInt(result[3], 16),
-      ]
+    ? [parseInt(result[1], 16), parseInt(result[2], 16), parseInt(result[3], 16)]
     : [0, 0, 0];
 }
 
@@ -78,7 +74,10 @@ export async function generateVPATPDF(
       productInfo: { enabled: true, title: 'Product Information' },
       evaluationMethods: { enabled: true, title: 'Evaluation Methods Used' },
       applicableCriteria: { enabled: true, title: 'Applicable Standards/Guidelines' },
-      legalDisclaimer: { enabled: true, content: 'This document is provided for information purposes only.' },
+      legalDisclaimer: {
+        enabled: true,
+        content: 'This document is provided for information purposes only.',
+      },
     };
 
     const columns = template?.columns || {
@@ -174,7 +173,9 @@ export async function generateVPATPDF(
 
       const totalCriteria = results.length;
       const supports = results.filter((r) => r.conformance === 'Supports').length;
-      const partiallySupports = results.filter((r) => r.conformance === 'Partially Supports').length;
+      const partiallySupports = results.filter(
+        (r) => r.conformance === 'Partially Supports'
+      ).length;
       const doesNotSupport = results.filter((r) => r.conformance === 'Does Not Support').length;
       const notApplicable = results.filter((r) => r.conformance === 'Not Applicable').length;
 
@@ -210,7 +211,7 @@ export async function generateVPATPDF(
       setSecondaryStyle(baseFontSize - 1, true);
       doc.text('Legal Disclaimer', margin, yPosition);
       yPosition += 5;
-      
+
       setSecondaryStyle(baseFontSize - 2, false);
       const disclaimer = doc.splitTextToSize(sections.legalDisclaimer.content, contentWidth);
       doc.text(disclaimer, margin, yPosition);
@@ -230,18 +231,25 @@ export async function generateVPATPDF(
 
     // Determine columns to show
     const activeColumns: { id: string; label: string; width: number }[] = [];
-    
-    if (columns.criterionNumber) activeColumns.push({ id: 'number', label: 'Criteria', width: 15 });
-    if (columns.criterionName) activeColumns.push({ id: 'name', label: 'Success Criterion', width: 50 });
-    if (columns.levelColumn) activeColumns.push({ id: 'level', label: 'Level', width: 15 });
-    if (columns.conformanceStatus) activeColumns.push({ id: 'status', label: 'Conformance', width: 35 });
-    
-    // Add custom columns from template or project
-    const customCols = columns.customColumns.length > 0 
-      ? columns.customColumns 
-      : (project.vpatConfig.customColumns || []).map(c => ({ id: c.name, name: c.name, width: 25 }));
 
-    customCols.forEach(col => {
+    if (columns.criterionNumber) activeColumns.push({ id: 'number', label: 'Criteria', width: 15 });
+    if (columns.criterionName)
+      activeColumns.push({ id: 'name', label: 'Success Criterion', width: 50 });
+    if (columns.levelColumn) activeColumns.push({ id: 'level', label: 'Level', width: 15 });
+    if (columns.conformanceStatus)
+      activeColumns.push({ id: 'status', label: 'Conformance', width: 35 });
+
+    // Add custom columns from template or project
+    const customCols =
+      columns.customColumns.length > 0
+        ? columns.customColumns
+        : (project.vpatConfig.customColumns || []).map((c) => ({
+            id: c.name,
+            name: c.name,
+            width: 25,
+          }));
+
+    customCols.forEach((col) => {
       activeColumns.push({ id: col.id, label: col.name, width: col.width || 25 });
     });
 
@@ -250,11 +258,11 @@ export async function generateVPATPDF(
     // Recalculate widths to fit page
     const totalFixedWidth = activeColumns.reduce((sum, col) => sum + col.width, 0);
     const scaleFactor = contentWidth / totalFixedWidth;
-    activeColumns.forEach(col => col.width *= scaleFactor);
+    activeColumns.forEach((col) => (col.width *= scaleFactor));
 
     // Draw Header
     doc.setFont(fontFamily, 'bold');
-    
+
     // Header background
     if (styling.headerStyle === 'background' || styling.headerStyle === 'both') {
       doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
@@ -296,7 +304,7 @@ export async function generateVPATPDF(
       const rowData: { text: string; x: number; width: number }[] = [];
 
       // Prepare data
-      activeColumns.forEach(col => {
+      activeColumns.forEach((col) => {
         let text = '';
         if (col.id === 'number') text = criterion.num;
         else if (col.id === 'name') text = criterion.handle;
@@ -321,7 +329,7 @@ export async function generateVPATPDF(
       }
 
       // Draw text
-      rowData.forEach(data => {
+      rowData.forEach((data) => {
         doc.text(data.text, data.x + 2, yPosition + 5);
       });
 
@@ -360,7 +368,7 @@ export async function generateVPATPDF(
         try {
           const imgProps = doc.getImageProperties(screenshot.dataUrl);
           const imgRatio = imgProps.width / imgProps.height;
-          
+
           let imgWidth = contentWidth;
           let imgHeight = contentWidth / imgRatio;
 
@@ -381,16 +389,19 @@ export async function generateVPATPDF(
           doc.setFont(fontFamily, 'normal');
           doc.setFontSize(9);
           doc.setTextColor(100, 100, 100);
-          doc.text(`ID: ${screenshot.id} | Date: ${new Date(screenshot.uploadedDate).toLocaleDateString()}`, margin, yPosition);
+          doc.text(
+            `ID: ${screenshot.id} | Date: ${new Date(screenshot.uploadedDate).toLocaleDateString()}`,
+            margin,
+            yPosition
+          );
           doc.setTextColor(0, 0, 0);
           doc.setFontSize(10);
-          
+
           yPosition += 10;
-          
+
           doc.setDrawColor(220, 220, 220);
           doc.line(margin, yPosition, pageWidth - margin, yPosition);
           yPosition += 10;
-
         } catch (err) {
           console.error('Error adding image to PDF:', err);
           doc.setTextColor(255, 0, 0);
@@ -411,12 +422,7 @@ export async function generateVPATPDF(
         doc.setFontSize(9);
         doc.setFont(fontFamily, 'normal');
         doc.setTextColor(100, 100, 100);
-        doc.text(
-          `Page ${i} of ${totalPages}`,
-          pageWidth / 2,
-          pageHeight - 10,
-          { align: 'center' }
-        );
+        doc.text(`Page ${i} of ${totalPages}`, pageWidth / 2, pageHeight - 10, { align: 'center' });
         doc.text(
           `Generated by VPAT Creator - ${new Date().toLocaleDateString()}`,
           pageWidth / 2,

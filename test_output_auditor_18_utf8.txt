@@ -1,0 +1,396 @@
+﻿
+ RUN  v4.0.10 C:/Users/clean/Desktop/VPAT_Creation/vpat-creator
+
+ Γ¥» src/tests/user-workflows.test.tsx (3 tests | 1 failed | 2 skipped) 12661ms
+     ├ù Auditor (Alice) performs a full audit workflow 12656ms
+     Γåô Developer (Bob) fixes a bug and updates result
+     Γåô Manager (Charlie) exports results
+node.exe : 
+At C:\Program Files\nodejs\npx.ps1:29 
+char:3
++   & $NODE_EXE $NPX_CLI_JS $args
++   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecifie 
+   d: (:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeComma 
+   ndError
+ 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 1 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  src/tests/user-workflows.test.tsx 
+> User Workflows > Auditor (Alice) 
+performs a full audit workflow
+TestingLibraryElementError: Unable to 
+find an element with the text: /1 \/ /. 
+This could be because the text is broken 
+up by multiple elements. In this case, 
+you can provide a function for your text 
+matcher to make your matcher more 
+flexible.
+
+Ignored nodes: comments, script, style
+[36m<body[39m
+  [33mstyle[39m=[32m""[39m
+[36m>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"workflow-conta
+iner"[39m
+    [36m>[39m
+      [36m<header[39m
+        [33mclass[39m=[32m"workflow-hea
+der"[39m
+      [36m>[39m
+        [36m<h1>[39m
+          [0mTesting Complete! ≡ƒÄë[0m
+        [36m</h1>[39m
+        [36m<p>[39m
+          [0mAudit of [0m
+          [36m<strong>[39m
+            [0mTest Page[0m
+          [36m</strong>[39m
+          [0m - WCAG [0m
+          [0m2.2[0m
+          [0m Level [0m
+          [0mA, AA[0m
+        [36m</p>[39m
+      [36m</header>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"workflow-sum
+mary"[39m
+      [36m>[39m
+        [36m<div[39m
+          
+[33mclass[39m=[32m"summary-stats"[39m
+        [36m>[39m
+          [36m<div[39m
+            
+[33mclass[39m=[32m"stat-card 
+stat-success"[39m
+          [36m>[39m
+            [36m<div[39m
+              
+[33mclass[39m=[32m"stat-value"[39m
+            [36m>[39m
+              [0m1[0m
+            [36m</div>[39m
+            [36m<div[39m
+              
+[33mclass[39m=[32m"stat-label"[39m
+            [36m>[39m
+              [0mPassing[0m
+            [36m</div>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            
+[33mclass[39m=[32m"stat-card 
+stat-error"[39m
+          [36m>[39m
+            [36m<div[39m
+              
+[33mclass[39m=[32m"stat-value"[39m
+            [36m>[39m
+              [0m0[0m
+            [36m</div>[39m
+            [36m<div[39m
+              
+[33mclass[39m=[32m"stat-label"[39m
+            [36m>[39m
+              [0mIssues Found[0m
+            [36m</div>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            
+[33mclass[39m=[32m"stat-card 
+stat-info"[39m
+          [36m>[39m
+            [36m<div[39m
+              
+[33mclass[39m=[32m"stat-value"[39m
+            [36m>[39m
+              [0m1[0m
+            [36m</div>[39m
+            [36m<div[39m
+              
+[33mclass[39m=[32m"stat-label"[39m
+            [36m>[39m
+              [0mTotal Tested[0m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"summary-ac
+tions"[39m
+        [36m>[39m
+          [36m<button[39m
+            
+[33maria-busy[39m=[32m"false"[39m
+            [33mclass[39m=[32m"btn 
+btn--primary btn--lg"[39m
+            
+[33mtype[39m=[32m"button"[39m
+          [36m>[39m
+            [36m<span[39m
+              
+[33mclass[39m=[32m"btn__content"[39m
+            [36m>[39m
+              [0mExport Results[0m
+            [36m</span>[39m
+          [36m</button>[39m
+          [36m<button[39m
+            
+[33maria-busy[39m=[32m"false"[39m
+            [33mclass[39m=[32m"btn 
+btn--secondary btn--lg"[39m
+            
+[33mtype[39m=[32m"button"[39m
+          [36m>[39m
+            [36m<span[39m
+              
+[33mclass[39m=[32m"btn__content"[39m
+            [36m>[39m
+              [0mReview Tests[0m
+            [36m</span>[39m
+          [36m</button>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          
+[33mclass[39m=[32m"summary-list"[39m
+        [36m>[39m
+          [36m<h3>[39m
+            [0mTest Results by Success 
+Criteria[0m
+          [36m</h3>[39m
+          [36m<div[39m
+            
+[33mclass[39m=[32m"results-grid"[39m
+          [36m>[39m
+            [36m<button[39m
+              
+[33mclass[39m=[32m"result-item 
+result-supports"[39m
+              
+[33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<div[39m
+                
+[33mclass[39m=[32m"result-number"[39m
+              [36m>[39m
+                [0m1.1.1[0m
+              [36m</div>[39m
+              [36m<div[39m
+                
+[33mclass[39m=[32m"result-title"[39m
+              [36m>[39m
+                [0mNon-text Content[0m
+              [36m</div>[39m
+              [36m<div[39m
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 2 skipped (3)
+   Start at  22:10:07
+   Duration  21.08s (transform 2.01s, setup 1.10s, collect 4.14s, tests 12.66s, environment 2.67s, prepare 86ms)
+
+                
+[33mclass[39m=[32m"result-status"[39m
+              [36m>[39m
+                [0mΓ£ô Supports[0m
+              [36m</div>[39m
+            [36m</button>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body[39m
+    [33mstyle[39m=[32m""[39m
+  [36m>[39m
+    [36m<div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"workflow-con
+tainer"[39m
+      [36m>[39m
+        [36m<header[39m
+          [33mclass[39m=[32m"workflow-h
+eader"[39m
+        [36m>[39m
+          [36m<h1>[39m
+            [0mTesting Complete! ≡ƒÄë[0m
+          [36m</h1>[39m
+          [36m<p>[39m
+            [0mAudit of [0m
+            [36m<strong>[39m
+              [0mTest Page[0m
+            [36m</strong>[39m
+            [0m - WCAG [0m
+            [0m2.2[0m
+            [0m Level [0m
+            [0mA, AA[0m
+          [36m</p>[39m
+        [36m</header>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"workflow-s
+ummary"[39m
+        [36m>[39m
+          [36m<div[39m
+            
+[33mclass[39m=[32m"summary-stats"[39m
+          [36m>[39m
+            [36m<div[39m
+              
+[33mclass[39m=[32m"stat-card 
+stat-success"[39m
+            [36m>[39m
+              [36m<div[39m
+                
+[33mclass[39m=[32m"stat-value"[39m
+              [36m>[39m
+                [0m1[0m
+              [36m</div>[39m
+              [36m<div[39m
+                
+[33mclass[39m=[32m"stat-label"[39m
+              [36m>[39m
+                [0mPassing[0m
+              [36m</div>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              
+[33mclass[39m=[32m"stat-card 
+stat-error"[39m
+            [36m>[39m
+              [36m<div[39m
+                
+[33mclass[39m=[32m"stat-value"[39m
+              [36m>[39m
+                [0m0[0m
+              [36m</div>[39m
+              [36m<div[39m
+                
+[33mclass[39m=[32m"stat-label"[39m
+              [36m>[39m
+                [0mIssues Found[0m
+              [36m</div>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              
+[33mclass[39m=[32m"stat-card 
+stat-info"[39m
+            [36m>[39m
+              [36m<div[39m
+                
+[33mclass[39m=[32m"stat-value"[39m
+              [36m>[39m
+                [0m1[0m
+              [36m</div>[39m
+              [36m<div[39m
+                
+[33mclass[39m=[32m"stat-label"[39m
+              [36m>[39m
+                [0mTotal Tested[0m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"summary-
+actions"[39m
+          [36m>[39m
+            [36m<button[39m
+              
+[33maria-busy[39m=[32m"false"[39m
+              [33mclass[39m=[32m"btn 
+btn--primary btn--lg"[39m
+              
+[33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<span[39m
+                
+[33mclass[39m=[32m"btn__content"[39m
+              [36m>[39m
+                [0mExport Results[0m
+              [36m</span>[39m
+            [36m</button>[39m
+            [36m<button[39m
+              
+[33maria-busy[39m=[32m"false"[39m
+              [33mclass[39m=[32m"btn 
+btn--secondary btn--lg"[39m
+              
+[33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<span[39m
+                
+[33mclass[39m=[32m"btn__content"[39m
+              [36m>[39m
+                [0mReview Tests[0m
+              [36m</span>[39m
+            [36m</button>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            
+[33mclass[39m=[32m"summary-list"[39m
+          [36m>[39m
+            [36m<h3>[39m
+              [0mTest Results by Success 
+Criteria[0m
+            [36m</h3>[39m
+            [36m<div[39m
+              
+[33mclass[39m=[32m"results-grid"[39m
+            [36m>[39m
+              [36m<button[39m
+                
+[33mclass[39m=[32m"result-item 
+result-supports"[39m
+                
+[33mtype[39m=[32m"button"[39m
+              [36m>[39m
+                [36m<div[39m
+                  
+[33mclass[39m=[32m"result-number"[39m
+                [36m>[39m
+                  [0m1.1.1[0m
+                [36m</div>[39m
+                [36m<div[39m
+                  
+[33mclass[39m=[32m"result-title"[39m
+                [36m>[39m
+                  [0mNon-text Content[0m
+                [36m</div>[39m
+                [36m<div[39m
+                  
+[33mclass[39m=[32m"result-status"[39m
+                [36m>[39m
+                  [0mΓ£ô Supports[0m
+                [36m</div>[39m
+              [36m</button>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</body>[39m
+[36m</html>[39m...
+ Γ¥» Proxy.waitForWrapper node_modules/@te
+sting-library/dom/dist/wait-for.js:163:27
+ Γ¥» 
+src/tests/user-workflows.test.tsx:153:11
+    151|     // we assume the component 
+logic we just fixed handles this. 
+    152|     // We can check if the UI 
+moved to the next item.
+    153|     await waitFor(() => {
+       |           ^
+    154|       expect(screen.getByText(/1 
+\/ /)).toBeInTheDocument(); // ProgreΓÇª
+    155|     });
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+

@@ -11,10 +11,7 @@ export interface UploadedImage {
 /**
  * Compress and convert image to base64
  */
-export async function processImage(
-  file: File,
-  maxSizeMB: number = 2
-): Promise<UploadedImage> {
+export async function processImage(file: File, maxSizeMB: number = 2): Promise<UploadedImage> {
   try {
     // Compression options
     const options = {

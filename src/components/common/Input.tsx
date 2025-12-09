@@ -35,11 +35,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
 
     const hasError = Boolean(error);
 
-    const wrapperClasses = [
-      'input-wrapper',
-      fullWidth && 'input-wrapper--full-width',
-      className,
-    ]
+    const wrapperClasses = ['input-wrapper', fullWidth && 'input-wrapper--full-width', className]
       .filter(Boolean)
       .join(' ');
 
@@ -77,9 +73,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
             disabled={disabled}
             required={required}
             aria-invalid={hasError}
-            aria-describedby={
-              [helperTextId, errorId].filter(Boolean).join(' ') || undefined
-            }
+            aria-describedby={[helperTextId, errorId].filter(Boolean).join(' ') || undefined}
             {...props}
           />
           {endIcon && (

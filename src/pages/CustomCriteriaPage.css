@@ -49,7 +49,7 @@
   padding: 1.5rem;
   border-radius: 8px;
   border: 1px solid var(--color-border);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .criterion-header {
@@ -71,9 +71,18 @@
   font-weight: bold;
 }
 
-.level-A { background: #fee2e2; color: #991b1b; }
-.level-AA { background: #fef3c7; color: #92400e; }
-.level-AAA { background: #d1fae5; color: #065f46; }
+.level-A {
+  background: #fee2e2;
+  color: #991b1b;
+}
+.level-AA {
+  background: #fef3c7;
+  color: #92400e;
+}
+.level-AAA {
+  background: #d1fae5;
+  color: #065f46;
+}
 
 .delete-btn {
   margin-left: auto;

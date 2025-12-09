@@ -27,15 +27,15 @@ export function BugReportGenerator({
   onClose,
   defaultComponentName,
 }: BugReportGeneratorProps) {
-  const bugs = useMemo(() => 
-    extractBugsFromResults(results, components, screenshots, defaultComponentName),
+  const bugs = useMemo(
+    () => extractBugsFromResults(results, components, screenshots, defaultComponentName),
     [results, components, screenshots, defaultComponentName]
   );
   const [selectedFormat, setSelectedFormat] = useState<'markdown' | 'csv' | 'json'>('markdown');
   const [severityFilter, setSeverityFilter] = useState<'all' | 'critical' | 'major' | 'minor'>(
     'all'
   );
-  
+
   // Issue Tracker State
   const [trackerConfig, setTrackerConfig] = useState(issueTrackerService.getConfig());
   const [isExportingToTracker, setIsExportingToTracker] = useState(false);
@@ -83,14 +83,18 @@ export function BugReportGenerator({
 
   const handleExportToTracker = async () => {
     if (!trackerConfig.enabled) return;
-    
-    if (!window.confirm(`Are you sure you want to create ${filteredBugs.length} issues in ${trackerConfig.type === 'github' ? 'GitHub' : trackerConfig.type === 'jira' ? 'Jira' : 'Asana'}?`)) {
+
+    if (
+      !window.confirm(
+        `Are you sure you want to create ${filteredBugs.length} issues in ${trackerConfig.type === 'github' ? 'GitHub' : trackerConfig.type === 'jira' ? 'Jira' : 'Asana'}?`
+      )
+    ) {
       return;
     }
 
     setIsExportingToTracker(true);
     setExportProgress({ current: 0, total: filteredBugs.length });
-    
+
     let successCount = 0;
     let failCount = 0;
 
@@ -109,20 +113,26 @@ ${bug.description}
 **Remediation:**
 ${bug.suggestedFix || 'No specific remediation provided.'}
           `.trim(),
-          labels: ['accessibility', `wcag-${bug.wcagLevel.toLowerCase()}`, `severity-${bug.severity}`]
+          labels: [
+            'accessibility',
+            `wcag-${bug.wcagLevel.toLowerCase()}`,
+            `severity-${bug.severity}`,
+          ],
         });
         successCount++;
       } catch (error) {
         console.error('Failed to export bug:', error);
         failCount++;
       }
-      setExportProgress(prev => ({ ...prev, current: prev.current + 1 }));
+      setExportProgress((prev) => ({ ...prev, current: prev.current + 1 }));
     }
 
     setIsExportingToTracker(false);
-    
+
     if (failCount === 0) {
-      toast.success(`Successfully exported ${successCount} issues to ${trackerConfig.type === 'github' ? 'GitHub' : trackerConfig.type === 'jira' ? 'Jira' : 'Asana'}!`);
+      toast.success(
+        `Successfully exported ${successCount} issues to ${trackerConfig.type === 'github' ? 'GitHub' : trackerConfig.type === 'jira' ? 'Jira' : 'Asana'}!`
+      );
     } else {
       toast.warning(`Export complete: ${successCount} succeeded, ${failCount} failed.`);
     }
@@ -134,8 +144,8 @@ ${bug.suggestedFix || 'No specific remediation provided.'}
 
   return (
     <div className="bug-report-generator">
-      <div 
-        className="bug-report-generator__overlay" 
+      <div
+        className="bug-report-generator__overlay"
         onClick={onClose}
         role="button"
         tabIndex={0}
@@ -216,9 +226,7 @@ ${bug.suggestedFix || 'No specific remediation provided.'}
               <select
                 id="format-select"
                 value={selectedFormat}
-                onChange={(e) =>
-                  setSelectedFormat(e.target.value as 'markdown' | 'csv' | 'json')
-                }
+                onChange={(e) => setSelectedFormat(e.target.value as 'markdown' | 'csv' | 'json')}
                 className="bug-filter__select"
               >
                 <option value="markdown">Markdown (.md)</option>
@@ -229,9 +237,7 @@ ${bug.suggestedFix || 'No specific remediation provided.'}
           </div>
 
           <div className="bug-list">
-            <h3 className="bug-list__title">
-              Issues ({filteredBugs.length})
-            </h3>
+            <h3 className="bug-list__title">Issues ({filteredBugs.length})</h3>
             <div className="bug-list__items">
               {filteredBugs.map((bug, index) => (
                 <div key={bug.id} className={`bug-item bug-item--${bug.severity}`}>
@@ -263,16 +269,15 @@ ${bug.suggestedFix || 'No specific remediation provided.'}
             Cancel
           </Button>
           {trackerConfig.enabled && (
-            <Button 
-              variant="secondary" 
-              onClick={handleExportToTracker} 
+            <Button
+              variant="secondary"
+              onClick={handleExportToTracker}
               disabled={filteredBugs.length === 0 || isExportingToTracker}
               loading={isExportingToTracker}
             >
-              {isExportingToTracker 
-                ? `Exporting ${exportProgress.current}/${exportProgress.total}...` 
-                : `Export to ${trackerConfig.type === 'github' ? 'GitHub' : trackerConfig.type === 'jira' ? 'Jira' : 'Asana'}`
-              }
+              {isExportingToTracker
+                ? `Exporting ${exportProgress.current}/${exportProgress.total}...`
+                : `Export to ${trackerConfig.type === 'github' ? 'GitHub' : trackerConfig.type === 'jira' ? 'Jira' : 'Asana'}`}
             </Button>
           )}
           <Button variant="primary" onClick={handleExport} disabled={filteredBugs.length === 0}>

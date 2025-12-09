@@ -40,7 +40,7 @@ export function generateSharePayload(
   currentUserName: string = 'Unknown'
 ): SharePayload {
   const testedCount = results.length; // All results are considered tested if they exist
-  
+
   return {
     version: '1.0',
     exportedAt: new Date().toISOString(),
@@ -65,12 +65,15 @@ export function generateSharePayload(
 /**
  * Generate email subject and body for sharing
  */
-export function generateEmailContent(payload: SharePayload, customMessage?: string): {
+export function generateEmailContent(
+  payload: SharePayload,
+  customMessage?: string
+): {
   subject: string;
   body: string;
 } {
   const subject = `Accessibility Audit: ${payload.audit.name} (${payload.metadata.progressPercentage}% Complete)`;
-  
+
   const body = `Hi there,
 
 I'm sharing an accessibility audit for ${payload.audit.name}.
@@ -113,13 +116,13 @@ export async function shareViaEmail(
   try {
     const { subject, body } = generateEmailContent(payload, customMessage);
     const recipientsStr = recipients.join(',');
-    
+
     // Create mailto link
     const mailtoLink = `mailto:${recipientsStr}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    
+
     // Open email client
     window.open(mailtoLink, '_blank');
-    
+
     // Also trigger download of JSON file
     const jsonStr = JSON.stringify(payload, null, 2);
     const blob = new Blob([jsonStr], { type: 'application/json' });
@@ -129,7 +132,7 @@ export async function shareViaEmail(
     a.download = `audit-${payload.audit.name.replace(/[^a-z0-9]/gi, '-').toLowerCase()}-${new Date().toISOString().split('T')[0]}.json`;
     a.click();
     URL.revokeObjectURL(url);
-    
+
     logger.info('Shared via email', { recipients: recipients.length });
   } catch (error) {
     logger.error('Failed to share via email:', error);
@@ -200,7 +203,7 @@ export function downloadAuditFile(payload: SharePayload): void {
     a.download = `audit-${payload.audit.name.replace(/[^a-z0-9]/gi, '-').toLowerCase()}-${new Date().toISOString().split('T')[0]}.json`;
     a.click();
     URL.revokeObjectURL(url);
-    
+
     logger.info('Downloaded audit file');
   } catch (error) {
     logger.error('Failed to download audit:', error);

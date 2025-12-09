@@ -55,7 +55,7 @@ export function ImageUpload({
 
           // Update progress
           setUploadProgress(((i + 1) / acceptedFiles.length) * 100);
-        } catch (error) {
+        } catch {
           errors.push(`${file.name}: Failed to process`);
         }
       }

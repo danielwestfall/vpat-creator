@@ -1,0 +1,76 @@
+﻿
+ RUN  v4.0.10 C:/Users/clean/Desktop/VPAT_Creation/vpat-creator
+
+node.exe : stderr | 
+src/tests/user-workflows.test.tsx > User 
+Workflows > Auditor (Alice) performs a 
+full audit workflow
+At C:\Program Files\nodejs\npx.ps1:29 
+char:3
++   & $NODE_EXE $NPX_CLI_JS $args
++   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecifie 
+   d: (stderr | src/te... audit workflow  
+  :String) [], RemoteException
+    + FullyQualifiedErrorId : NativeComma 
+   ndError
+ 
+[vitest] The vi.fn() mock did not use 
+'function' or 'class' in its 
+implementation, see 
+https://vitest.dev/api/vi#vi-spyon for 
+examples.
+
+ Γ¥» src/tests/user-workflows.test.tsx (3 tests | 1 failed | 2 skipped) 6553ms
+     ├ù Auditor (Alice) performs a full audit workflow 6548ms
+     Γåô Developer (Bob) fixes a bug and updates result
+     Γåô Manager (Charlie) exports results
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 1 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  src/tests/user-workflows.test.tsx 
+> User Workflows > Auditor (Alice) 
+performs a full audit workflow
+TypeError: () => ({
+      observe: 
+__vite_ssr_import_0__.vi.fn(),
+      unobserve: 
+__vite_ssr_import_0__.vi.fn(),
+      di...<omitted>...}) is not a 
+constructor
+ Γ¥» autoUpdate node_modules/@floating-ui/
+dom/dist/floating-ui.dom.mjs:630:22
+ Γ¥» Object.whileElementsMounted [as 
+current] node_modules/@radix-ui/react-popp
+er/dist/index.mjs:96:25
+ Γ¥» node_modules/@floating-ui/react-dom/d
+ist/floating-ui.react-dom.mjs:189:40
+ Γ¥» Object.react_stack_bottom_frame node_
+modules/react-dom/cjs/react-dom-client.dev
+elopment.js:25989:20
+ Γ¥» runWithFiberInDEV node_modules/react-
+dom/cjs/react-dom-client.development.js:87
+4:13
+ Γ¥» commitHookEffectListMount node_module
+s/react-dom/cjs/react-dom-client.developme
+nt.js:13249:29
+ Γ¥» commitHookLayoutEffects node_modules/
+react-dom/cjs/react-dom-client.development
+.js:13213:11
+ Γ¥» commitLayoutEffectOnFiber node_module
+s/react-dom/cjs/react-dom-client.developme
+nt.js:13951:13
+ Γ¥» recursivelyTraverseLayoutEffects node
+_modules/react-dom/cjs/react-dom-client.de
+velopment.js:15159:11
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 2 skipped (3)
+   Start at  21:23:59
+   Duration  15.61s (transform 2.30s, setup 1.06s, collect 4.57s, tests 6.55s, environment 2.93s, prepare 47ms)
+

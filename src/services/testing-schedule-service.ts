@@ -1,10 +1,10 @@
 /**
  * Generate Testing Schedules Script
- * 
+ *
  * This script loads the WCAG 2.2 JSON data and generates two testing schedules:
  * 1. Success Criteria-based schedule
  * 2. Component/Technique-based schedule
- * 
+ *
  * Outputs are saved as JSON and Markdown files for easy reference
  */
 
@@ -36,7 +36,10 @@ export class TestingScheduleService {
    * Generate Success Criteria-based testing schedule
    */
   generateSCSchedule(config: TestingScheduleConfig): TestingScheduleItem[] {
-    return generateSCBasedSchedule(this.wcagData as Parameters<typeof generateSCBasedSchedule>[0], config.levels);
+    return generateSCBasedSchedule(
+      this.wcagData as Parameters<typeof generateSCBasedSchedule>[0],
+      config.levels
+    );
   }
 
   /**
@@ -294,9 +297,11 @@ export class TestingScheduleService {
           lines.push(`#### ${tech.techniqueId}: ${tech.title}`);
           lines.push('');
           lines.push('**Related Success Criteria**:');
-          tech.relatedSC.forEach((sc: ComponentTestingScheduleItem['techniques'][0]['relatedSC'][0]) => {
-            lines.push(`- ${sc.scNumber} ${sc.scTitle} (Level ${sc.level})`);
-          });
+          tech.relatedSC.forEach(
+            (sc: ComponentTestingScheduleItem['techniques'][0]['relatedSC'][0]) => {
+              lines.push(`- ${sc.scNumber} ${sc.scTitle} (Level ${sc.level})`);
+            }
+          );
           lines.push('');
           lines.push('**Testing Instructions**:');
           lines.push('```');

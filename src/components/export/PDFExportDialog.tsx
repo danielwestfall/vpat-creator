@@ -53,8 +53,8 @@ export function PDFExportDialog({
 
   return (
     <div className="pdf-export-dialog">
-      <div 
-        className="pdf-export-dialog__overlay" 
+      <div
+        className="pdf-export-dialog__overlay"
         onClick={onClose}
         role="button"
         tabIndex={0}
@@ -66,16 +66,17 @@ export function PDFExportDialog({
         aria-label="Close dialog"
       />
 
-      <div className="pdf-export-dialog__content" role="dialog" aria-modal="true" aria-labelledby="pdf-export-title">
+      <div
+        className="pdf-export-dialog__content"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="pdf-export-title"
+      >
         <div className="pdf-export-dialog__header">
           <h2 id="pdf-export-title" className="pdf-export-dialog__title">
             Export VPAT PDF
           </h2>
-          <button
-            className="pdf-export-dialog__close"
-            onClick={onClose}
-            aria-label="Close dialog"
-          >
+          <button className="pdf-export-dialog__close" onClick={onClose} aria-label="Close dialog">
             ×
           </button>
         </div>
@@ -116,8 +117,12 @@ export function PDFExportDialog({
           </div>
 
           <div className="pdf-export-option">
-            <label className="pdf-export-option__checkbox-label">
+            <label
+              className="pdf-export-option__checkbox-label"
+              htmlFor="include-executive-summary"
+            >
               <input
+                id="include-executive-summary"
                 type="checkbox"
                 checked={options.includeExecutiveSummary}
                 onChange={(e) =>
@@ -134,9 +139,7 @@ export function PDFExportDialog({
               <input
                 type="checkbox"
                 checked={options.includeScreenshots}
-                onChange={(e) =>
-                  setOptions({ ...options, includeScreenshots: e.target.checked })
-                }
+                onChange={(e) => setOptions({ ...options, includeScreenshots: e.target.checked })}
                 className="pdf-export-option__checkbox"
                 disabled={screenshots.length === 0}
               />

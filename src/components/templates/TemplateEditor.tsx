@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
+import { toast } from '../../store/toast-store';
 import { Button, Input, Select, Checkbox } from '../common';
 import type { VPATTemplate } from '../../models/template-types';
-import { saveTemplate, createTemplate } from '../../services/template-service';
+import { createTemplate, saveTemplate } from '../../services/template-service';
 import './TemplateEditor.css';
 
 interface TemplateEditorProps {
@@ -31,9 +32,9 @@ export function TemplateEditor({ template, onSave, onCancel }: TemplateEditorPro
         productInfo: { enabled: true, title: 'Product Information' },
         evaluationMethods: { enabled: true, title: 'Evaluation Methods' },
         applicableCriteria: { enabled: true, title: 'Applicable Standards' },
-        legalDisclaimer: { 
-          enabled: true, 
-          content: 'This document is provided for information purposes only.' 
+        legalDisclaimer: {
+          enabled: true,
+          content: 'This document is provided for information purposes only.',
         },
       },
       styling: {
@@ -58,7 +59,7 @@ export function TemplateEditor({ template, onSave, onCancel }: TemplateEditorPro
   const handleSave = async () => {
     try {
       let savedTemplate: VPATTemplate;
-      
+
       if (template) {
         // Update existing
         savedTemplate = { ...template, ...formData };
@@ -67,10 +68,10 @@ export function TemplateEditor({ template, onSave, onCancel }: TemplateEditorPro
         // Create new
         savedTemplate = await createTemplate(formData);
       }
-      
+
       onSave(savedTemplate);
     } catch (error) {
-      alert('Failed to save template');
+      toast.error('Failed to save template');
       console.error(error);
     }
   };
@@ -84,8 +85,8 @@ export function TemplateEditor({ template, onSave, onCancel }: TemplateEditorPro
 
   return (
     <div className="template-editor">
-      <div 
-        className="template-editor__overlay" 
+      <div
+        className="template-editor__overlay"
         onClick={onCancel}
         role="button"
         tabIndex={0}
@@ -106,7 +107,7 @@ export function TemplateEditor({ template, onSave, onCancel }: TemplateEditorPro
         </div>
 
         <div className="template-editor__tabs">
-          {tabs.map(tab => (
+          {tabs.map((tab) => (
             <button
               key={tab.id}
               className={`template-editor__tab ${activeTab === tab.id ? 'active' : ''}`}
@@ -123,11 +124,13 @@ export function TemplateEditor({ template, onSave, onCancel }: TemplateEditorPro
           {activeTab === 'branding' && (
             <div className="template-editor__section">
               <h3>Template Information</h3>
-              
+
               <Input
                 label="Template Name"
                 value={formData.name}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, name: e.target.value })}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
                 placeholder="My Custom Template"
                 required
               />
@@ -135,7 +138,9 @@ export function TemplateEditor({ template, onSave, onCancel }: TemplateEditorPro
               <Input
                 label="Description"
                 value={formData.description}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, description: e.target.value })}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
                 placeholder="Brief description of this template"
               />
 
@@ -144,20 +149,24 @@ export function TemplateEditor({ template, onSave, onCancel }: TemplateEditorPro
               <Input
                 label="Company Name"
                 value={formData.header.companyName}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({
-                  ...formData,
-                  header: { ...formData.header, companyName: e.target.value }
-                })}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setFormData({
+                    ...formData,
+                    header: { ...formData.header, companyName: e.target.value },
+                  })
+                }
                 placeholder="Your Company Name"
               />
 
               <Input
                 label="Report Title"
                 value={formData.header.reportTitle}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({
-                  ...formData,
-                  header: { ...formData.header, reportTitle: e.target.value }
-                })}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setFormData({
+                    ...formData,
+                    header: { ...formData.header, reportTitle: e.target.value },
+                  })
+                }
                 placeholder="Accessibility Conformance Report"
               />
 
@@ -165,18 +174,22 @@ export function TemplateEditor({ template, onSave, onCancel }: TemplateEditorPro
                 <Checkbox
                   label="Include Date in Report"
                   checked={formData.header.includeDate}
-                  onCheckedChange={(checked) => setFormData({
-                    ...formData,
-                    header: { ...formData.header, includeDate: checked }
-                  })}
+                  onCheckedChange={(checked) =>
+                    setFormData({
+                      ...formData,
+                      header: { ...formData.header, includeDate: checked },
+                    })
+                  }
                 />
                 <Checkbox
                   label="Include Page Numbers"
                   checked={formData.header.includePageNumbers}
-                  onCheckedChange={(checked) => setFormData({
-                    ...formData,
-                    header: { ...formData.header, includePageNumbers: checked }
-                  })}
+                  onCheckedChange={(checked) =>
+                    setFormData({
+                      ...formData,
+                      header: { ...formData.header, includePageNumbers: checked },
+                    })
+                  }
                 />
               </div>
             </div>
@@ -186,7 +199,9 @@ export function TemplateEditor({ template, onSave, onCancel }: TemplateEditorPro
           {activeTab === 'sections' && (
             <div className="template-editor__section">
               <h3>Report Sections</h3>
-              <p className="template-editor__hint">Choose which sections to include in your reports</p>
+              <p className="template-editor__hint">
+                Choose which sections to include in your reports
+              </p>
 
               <div className="template-editor__section-list">
                 {Object.entries(formData.sections).map(([key, section]) => (
@@ -194,23 +209,27 @@ export function TemplateEditor({ template, onSave, onCancel }: TemplateEditorPro
                     <Checkbox
                       label={section.title}
                       checked={section.enabled}
-                      onCheckedChange={(checked) => setFormData({
-                        ...formData,
-                        sections: {
-                          ...formData.sections,
-                          [key]: { ...section, enabled: checked }
-                        }
-                      })}
+                      onCheckedChange={(checked) =>
+                        setFormData({
+                          ...formData,
+                          sections: {
+                            ...formData.sections,
+                            [key]: { ...section, enabled: checked },
+                          },
+                        })
+                      }
                     />
                     <Input
                       value={section.title}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({
-                        ...formData,
-                        sections: {
-                          ...formData.sections,
-                          [key]: { ...section, title: e.target.value }
-                        }
-                      })}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                        setFormData({
+                          ...formData,
+                          sections: {
+                            ...formData.sections,
+                            [key]: { ...section, title: e.target.value },
+                          },
+                        })
+                      }
                       placeholder="Section title"
                       className="template-editor__section-title-input"
                     />
@@ -233,17 +252,21 @@ export function TemplateEditor({ template, onSave, onCancel }: TemplateEditorPro
                       id="primary-color-picker"
                       type="color"
                       value={formData.styling.primaryColor}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({
-                        ...formData,
-                        styling: { ...formData.styling, primaryColor: e.target.value }
-                      })}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                        setFormData({
+                          ...formData,
+                          styling: { ...formData.styling, primaryColor: e.target.value },
+                        })
+                      }
                     />
                     <Input
                       value={formData.styling.primaryColor}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({
-                        ...formData,
-                        styling: { ...formData.styling, primaryColor: e.target.value }
-                      })}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                        setFormData({
+                          ...formData,
+                          styling: { ...formData.styling, primaryColor: e.target.value },
+                        })
+                      }
                       placeholder="#2563eb"
                     />
                   </div>
@@ -256,17 +279,21 @@ export function TemplateEditor({ template, onSave, onCancel }: TemplateEditorPro
                       id="secondary-color-picker"
                       type="color"
                       value={formData.styling.secondaryColor}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({
-                        ...formData,
-                        styling: { ...formData.styling, secondaryColor: e.target.value }
-                      })}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                        setFormData({
+                          ...formData,
+                          styling: { ...formData.styling, secondaryColor: e.target.value },
+                        })
+                      }
                     />
                     <Input
                       value={formData.styling.secondaryColor}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({
-                        ...formData,
-                        styling: { ...formData.styling, secondaryColor: e.target.value }
-                      })}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                        setFormData({
+                          ...formData,
+                          styling: { ...formData.styling, secondaryColor: e.target.value },
+                        })
+                      }
                       placeholder="#64748b"
                     />
                   </div>
@@ -276,10 +303,12 @@ export function TemplateEditor({ template, onSave, onCancel }: TemplateEditorPro
               <Select
                 label="Font Family"
                 value={formData.styling.fontFamily}
-                onValueChange={(value) => setFormData({
-                  ...formData,
-                  styling: { ...formData.styling, fontFamily: value as any }
-                })}
+                onValueChange={(value) =>
+                  setFormData({
+                    ...formData,
+                    styling: { ...formData.styling, fontFamily: value as any },
+                  })
+                }
                 options={[
                   { value: 'Arial', label: 'Arial' },
                   { value: 'Helvetica', label: 'Helvetica' },
@@ -297,20 +326,24 @@ export function TemplateEditor({ template, onSave, onCancel }: TemplateEditorPro
                   min="9"
                   max="14"
                   value={formData.styling.fontSize}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({
-                    ...formData,
-                    styling: { ...formData.styling, fontSize: Number(e.target.value) }
-                  })}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setFormData({
+                      ...formData,
+                      styling: { ...formData.styling, fontSize: Number(e.target.value) },
+                    })
+                  }
                 />
               </div>
 
               <Select
                 label="Table Style"
                 value={formData.styling.tableStyle}
-                onValueChange={(value) => setFormData({
-                  ...formData,
-                  styling: { ...formData.styling, tableStyle: value as any }
-                })}
+                onValueChange={(value) =>
+                  setFormData({
+                    ...formData,
+                    styling: { ...formData.styling, tableStyle: value as any },
+                  })
+                }
                 options={[
                   { value: 'bordered', label: 'Bordered' },
                   { value: 'striped', label: 'Striped Rows' },
@@ -324,48 +357,60 @@ export function TemplateEditor({ template, onSave, onCancel }: TemplateEditorPro
           {activeTab === 'columns' && (
             <div className="template-editor__section">
               <h3>Table Columns</h3>
-              <p className="template-editor__hint">Select which columns to include in WCAG tables</p>
+              <p className="template-editor__hint">
+                Select which columns to include in WCAG tables
+              </p>
 
               <div className="template-editor__checkbox-group">
                 <Checkbox
                   label="Criterion Number (e.g., 1.1.1)"
                   checked={formData.columns.criterionNumber}
-                  onCheckedChange={(checked) => setFormData({
-                    ...formData,
-                    columns: { ...formData.columns, criterionNumber: checked }
-                  })}
+                  onCheckedChange={(checked) =>
+                    setFormData({
+                      ...formData,
+                      columns: { ...formData.columns, criterionNumber: checked },
+                    })
+                  }
                 />
                 <Checkbox
                   label="Criterion Name"
                   checked={formData.columns.criterionName}
-                  onCheckedChange={(checked) => setFormData({
-                    ...formData,
-                    columns: { ...formData.columns, criterionName: checked }
-                  })}
+                  onCheckedChange={(checked) =>
+                    setFormData({
+                      ...formData,
+                      columns: { ...formData.columns, criterionName: checked },
+                    })
+                  }
                 />
                 <Checkbox
                   label="Level Column (A, AA, AAA)"
                   checked={formData.columns.levelColumn}
-                  onCheckedChange={(checked) => setFormData({
-                    ...formData,
-                    columns: { ...formData.columns, levelColumn: checked }
-                  })}
+                  onCheckedChange={(checked) =>
+                    setFormData({
+                      ...formData,
+                      columns: { ...formData.columns, levelColumn: checked },
+                    })
+                  }
                 />
                 <Checkbox
                   label="Conformance Status"
                   checked={formData.columns.conformanceStatus}
-                  onCheckedChange={(checked) => setFormData({
-                    ...formData,
-                    columns: { ...formData.columns, conformanceStatus: checked }
-                  })}
+                  onCheckedChange={(checked) =>
+                    setFormData({
+                      ...formData,
+                      columns: { ...formData.columns, conformanceStatus: checked },
+                    })
+                  }
                 />
                 <Checkbox
                   label="Remarks/Notes"
                   checked={formData.columns.remarks}
-                  onCheckedChange={(checked) => setFormData({
-                    ...formData,
-                    columns: { ...formData.columns, remarks: checked }
-                  })}
+                  onCheckedChange={(checked) =>
+                    setFormData({
+                      ...formData,
+                      columns: { ...formData.columns, remarks: checked },
+                    })
+                  }
                 />
               </div>
             </div>

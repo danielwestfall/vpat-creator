@@ -31,7 +31,7 @@ export const HELP_TOPICS: HelpTopic[] = [
       </ol>
       
       <p>Your progress is automatically saved to your browser's local storage, so you can close the tab and come back later.</p>
-    `
+    `,
   },
   {
     id: 'conducting-audit',
@@ -59,7 +59,7 @@ export const HELP_TOPICS: HelpTopic[] = [
 
       <h3>Navigation</h3>
       <p>Use the <strong>"Previous"</strong> and <strong>"Next"</strong> buttons to move between criteria. You can also use the sidebar to jump to specific sections.</p>
-    `
+    `,
   },
   {
     id: 'evidence-screenshots',
@@ -78,7 +78,7 @@ export const HELP_TOPICS: HelpTopic[] = [
       </ol>
 
       <p>Screenshots are stored locally in your browser. Note that including many high-resolution images may increase the size of your export file.</p>
-    `
+    `,
   },
   {
     id: 'team-collaboration',
@@ -103,7 +103,7 @@ export const HELP_TOPICS: HelpTopic[] = [
         <li>Select a team member's file to merge it into your master audit.</li>
         <li>If there are conflicts (e.g., you both tested the same item), a dialog will let you choose which version to keep.</li>
       </ol>
-    `
+    `,
   },
   {
     id: 'templates',
@@ -129,7 +129,7 @@ export const HELP_TOPICS: HelpTopic[] = [
         <li><strong>Styling:</strong> Colors, fonts, and table styles.</li>
         <li><strong>Columns:</strong> Choose which data columns to include in the report tables.</li>
       </ul>
-    `
+    `,
   },
   {
     id: 'exporting',
@@ -157,6 +157,6 @@ export const HELP_TOPICS: HelpTopic[] = [
 
       <h3>Backup (JSON)</h3>
       <p>Always keep a JSON backup of your work. Click <strong>"Backup JSON"</strong> to save the raw data file.</p>
-    `
-  }
+    `,
+  },
 ];

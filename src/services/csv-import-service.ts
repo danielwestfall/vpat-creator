@@ -24,14 +24,16 @@ export class CSVImportService {
         } catch (error) {
           resolve({
             success: false,
-            errors: [`Failed to parse file: ${error instanceof Error ? error.message : String(error)}`]
+            errors: [
+              `Failed to parse file: ${error instanceof Error ? error.message : String(error)}`,
+            ],
           });
         }
       };
       reader.onerror = () => {
         resolve({
           success: false,
-          errors: ['Failed to read file']
+          errors: ['Failed to read file'],
         });
       };
       reader.readAsText(file);
@@ -45,22 +47,26 @@ export class CSVImportService {
     }
 
     // Parse headers
-    const headers = this.parseCSVLine(lines[0]).map(h => h.toLowerCase().trim());
-    
+    const headers = this.parseCSVLine(lines[0]).map((h) => h.toLowerCase().trim());
+
     // Map column indices
     const colMap = {
-      scNumber: headers.findIndex(h => h.includes('sc number') || h.includes('criterion') || h === 'id'),
-      status: headers.findIndex(h => h.includes('status') || h.includes('conformance')),
-      notes: headers.findIndex(h => h.includes('notes') || h.includes('observations') || h.includes('remarks')),
-      testedBy: headers.findIndex(h => h.includes('tested by') || h.includes('tester')),
-      tools: headers.findIndex(h => h.includes('tools')),
-      level: headers.findIndex(h => h.includes('level'))
+      scNumber: headers.findIndex(
+        (h) => h.includes('sc number') || h.includes('criterion') || h === 'id'
+      ),
+      status: headers.findIndex((h) => h.includes('status') || h.includes('conformance')),
+      notes: headers.findIndex(
+        (h) => h.includes('notes') || h.includes('observations') || h.includes('remarks')
+      ),
+      testedBy: headers.findIndex((h) => h.includes('tested by') || h.includes('tester')),
+      tools: headers.findIndex((h) => h.includes('tools')),
+      level: headers.findIndex((h) => h.includes('level')),
     };
 
     if (colMap.scNumber === -1 || colMap.status === -1) {
-      return { 
-        success: false, 
-        errors: ['Could not find required columns: "SC Number" and "Conformance Status"'] 
+      return {
+        success: false,
+        errors: ['Could not find required columns: "SC Number" and "Conformance Status"'],
       };
     }
 
@@ -74,7 +80,7 @@ export class CSVImportService {
       if (!line) continue;
 
       const cols = this.parseCSVLine(line);
-      
+
       // Get SC Number
       const scNumber = cols[colMap.scNumber]?.trim();
       if (!scNumber) {
@@ -99,7 +105,7 @@ export class CSVImportService {
       // Parse Status
       const statusRaw = cols[colMap.status]?.trim();
       const status = this.normalizeStatus(statusRaw);
-      
+
       if (!status) {
         errors.push(`Row ${i + 1}: Invalid status "${statusRaw}" for ${scNumber}`);
         skipped++;
@@ -108,8 +114,8 @@ export class CSVImportService {
 
       // Create Result
       const result: TestResult = {
-        id: finalSC.id, // Use SC ID as Result ID for simplicity in import, or generate new? 
-                        // Ideally we match the ID of the SC.
+        id: finalSC.id, // Use SC ID as Result ID for simplicity in import, or generate new?
+        // Ideally we match the ID of the SC.
         successCriterionId: finalSC.id,
         level: finalSC.level,
         conformance: status,
@@ -117,11 +123,11 @@ export class CSVImportService {
         barriers: [],
         testingMethod: {
           type: 'Manual',
-          tools: cols[colMap.tools] ? cols[colMap.tools].split(',').map(t => t.trim()) : []
+          tools: cols[colMap.tools] ? cols[colMap.tools].split(',').map((t) => t.trim()) : [],
         },
         customNotes: cols[colMap.notes] || '',
         testedBy: cols[colMap.testedBy] || 'Imported',
-        testedDate: new Date()
+        testedDate: new Date(),
       };
 
       results.push(result);
@@ -134,8 +140,8 @@ export class CSVImportService {
       summary: {
         total: lines.length - 1, // minus header
         imported: results.length,
-        skipped
-      }
+        skipped,
+      },
     };
   }
 
@@ -143,10 +149,10 @@ export class CSVImportService {
     const result: string[] = [];
     let current = '';
     let inQuotes = false;
-    
+
     for (let i = 0; i < line.length; i++) {
       const char = line[i];
-      
+
       if (char === '"') {
         if (inQuotes && line[i + 1] === '"') {
           // Escaped quote
@@ -171,12 +177,14 @@ export class CSVImportService {
   private normalizeStatus(status: string): ConformanceStatus | undefined {
     if (!status) return undefined;
     const s = status.toLowerCase().trim();
-    
+
     if (s.includes('not applicable') || s === 'n/a' || s === 'na') return 'Not Applicable';
     if (s.includes('partially') || s === 'partial') return 'Partially Supports';
-    if (s.includes('does not') || s === 'fail' || s === 'failed' || s === 'non-compliant') return 'Does Not Support';
-    if (s.includes('supports') || s === 'pass' || s === 'passed' || s === 'compliant') return 'Supports';
-    
+    if (s.includes('does not') || s === 'fail' || s === 'failed' || s === 'non-compliant')
+      return 'Does Not Support';
+    if (s.includes('supports') || s === 'pass' || s === 'passed' || s === 'compliant')
+      return 'Supports';
+
     return undefined;
   }
 }

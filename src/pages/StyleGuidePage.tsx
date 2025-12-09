@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
+import { toast } from '../store/toast-store';
 import { Button, Input, Select } from '../components/common';
 import './StyleGuidePage.css';
 
-export interface StyleSettings {
+interface StyleSettings {
   primaryColor: string;
   secondaryColor: string;
   fontFamily: string;
@@ -21,7 +22,7 @@ export const StyleGuidePage: React.FC = () => {
 
   const handleSave = () => {
     // TODO: Save to global store/context
-    alert('Style settings saved! (Placeholder)');
+    toast.success('Style settings saved! (Placeholder)');
   };
 
   return (
@@ -100,21 +101,23 @@ export const StyleGuidePage: React.FC = () => {
 
       <div className="preview-section">
         <h2>Preview</h2>
-        <div 
+        <div
           className="preview-card"
           style={{
             fontFamily: settings.fontFamily,
             borderColor: settings.primaryColor,
           }}
         >
-          <h3 style={{ 
-            color: settings.primaryColor, 
-            fontWeight: settings.headingStyle === 'bold' ? 'bold' : 'normal' 
-          }}>
+          <h3
+            style={{
+              color: settings.primaryColor,
+              fontWeight: settings.headingStyle === 'bold' ? 'bold' : 'normal',
+            }}
+          >
             Sample Heading
           </h3>
           <p>This is how your text will look in the generated report.</p>
-          
+
           <table className={`preview-table ${settings.tableStyle}`}>
             <thead>
               <tr style={{ backgroundColor: settings.secondaryColor, color: 'white' }}>

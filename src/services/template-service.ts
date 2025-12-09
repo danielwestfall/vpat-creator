@@ -29,7 +29,7 @@ async function getDB(): Promise<IDBPDatabase> {
 export async function initializeTemplates(): Promise<void> {
   const db = await getDB();
   const count = await db.count(TEMPLATES_STORE);
-  
+
   if (count === 0) {
     // Add default templates
     for (const template of DEFAULT_TEMPLATES) {
@@ -65,8 +65,9 @@ export async function getTemplate(id: string): Promise<VPATTemplate | undefined>
  */
 export async function getDefaultTemplate(): Promise<VPATTemplate | null> {
   const db = await getDB();
-  const index = db.transaction(TEMPLATES_STORE).store.index('isDefault');
-  const template = await index.get(true as unknown as IDBValidKey) as VPATTemplate | undefined;
+
+  const allTemplates = await db.getAll(TEMPLATES_STORE);
+  const template = allTemplates.find((t) => t.isDefault);
   return template || null;
 }
 
@@ -91,7 +92,7 @@ export async function createTemplate(
     createdAt: new Date(),
     modifiedAt: new Date(),
   };
-  
+
   await saveTemplate(template);
   return template;
 }
@@ -112,7 +113,7 @@ export async function duplicateTemplate(id: string): Promise<VPATTemplate> {
   if (!original) {
     throw new Error('Template not found');
   }
-  
+
   const duplicate: VPATTemplate = {
     ...original,
     id: crypto.randomUUID(),
@@ -121,7 +122,7 @@ export async function duplicateTemplate(id: string): Promise<VPATTemplate> {
     createdAt: new Date(),
     modifiedAt: new Date(),
   };
-  
+
   await saveTemplate(duplicate);
   return duplicate;
 }
@@ -131,7 +132,7 @@ export async function duplicateTemplate(id: string): Promise<VPATTemplate> {
  */
 export async function setDefaultTemplate(id: string): Promise<void> {
   const db = await getDB();
-  
+
   // Unset all defaults
   const allTemplates = await getAllTemplates();
   for (const template of allTemplates) {
@@ -140,7 +141,7 @@ export async function setDefaultTemplate(id: string): Promise<void> {
       await db.put(TEMPLATES_STORE, template);
     }
   }
-  
+
   // Set new default
   const template = await getTemplate(id);
   if (template) {
@@ -166,11 +167,11 @@ export function exportTemplate(template: VPATTemplate): void {
       columns: template.columns,
     },
   };
-  
+
   const json = JSON.stringify(exportData, null, 2);
   const blob = new Blob([json], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
-  
+
   const a = document.createElement('a');
   a.href = url;
   a.download = `${template.name.replace(/[^a-z0-9]/gi, '-').toLowerCase()}-template.json`;
@@ -186,29 +187,33 @@ export function exportTemplate(template: VPATTemplate): void {
 export async function importTemplate(file: File): Promise<VPATTemplate> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    
+
     reader.onload = async (e) => {
       try {
         const json = e.target?.result as string;
         const data: TemplateImportData = JSON.parse(json);
-        
+
         // Validate format
         if (!data.formatVersion || !data.template) {
           throw new Error('Invalid template format');
         }
-        
+
         // Create template
         const template = await createTemplate(data.template);
         resolve(template);
       } catch (error) {
-        reject(new Error(`Failed to import template: ${error instanceof Error ? error.message : 'Unknown error'}`));
+        reject(
+          new Error(
+            `Failed to import template: ${error instanceof Error ? error.message : 'Unknown error'}`
+          )
+        );
       }
     };
-    
+
     reader.onerror = () => {
       reject(new Error('Failed to read file'));
     };
-    
+
     reader.readAsText(file);
   });
 }
@@ -219,16 +224,18 @@ export async function importTemplate(file: File): Promise<VPATTemplate> {
 export async function importTemplateFromJSON(json: string): Promise<VPATTemplate> {
   try {
     const data: TemplateImportData = JSON.parse(json);
-    
+
     // Validate format
     if (!data.formatVersion || !data.template) {
       throw new Error('Invalid template format');
     }
-    
+
     // Create template
     return await createTemplate(data.template);
   } catch (error) {
-    throw new Error(`Failed to import template: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error(
+      `Failed to import template: ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
   }
 }
 
@@ -237,12 +244,12 @@ export async function importTemplateFromJSON(json: string): Promise<VPATTemplate
  */
 export async function resetToDefaults(): Promise<void> {
   const db = await getDB();
-  
+
   // Clear all templates
   const tx = db.transaction(TEMPLATES_STORE, 'readwrite');
   await tx.store.clear();
   await tx.done;
-  
+
   // Re-initialize with defaults
   await initializeTemplates();
 }

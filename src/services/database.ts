@@ -57,13 +57,13 @@ export async function initializeDatabase() {
   try {
     await db.open();
     logger.info('Database opened successfully');
-    
+
     // Check if this is first run
     const projectCount = await db.projects.count();
     if (projectCount === 0) {
       logger.info('First run detected - database is ready');
     }
-    
+
     return true;
   } catch (error) {
     logger.error('Failed to initialize database:', error);
@@ -202,7 +202,7 @@ export async function getScreenshotsByTestResult(testResultId: string): Promise<
     const screenshots = await db.screenshots
       .where('testResultId')
       .equals(testResultId)
-      .filter(s => !s.projectId || s.projectId === 'current-audit')
+      .filter((s) => !s.projectId || s.projectId === 'current-audit')
       .toArray();
     return screenshots;
   } catch (error) {
@@ -216,13 +216,25 @@ export async function getScreenshotsByTestResult(testResultId: string): Promise<
  */
 export async function getScreenshotsByComponent(componentId: string): Promise<Screenshot[]> {
   try {
-    const screenshots = await db.screenshots
-      .where('componentId')
-      .equals(componentId)
-      .toArray();
+    const screenshots = await db.screenshots.where('componentId').equals(componentId).toArray();
     return screenshots;
   } catch (error) {
     logger.error('Failed to get screenshots:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get all screenshots for the current project
+ */
+export async function getAllScreenshots(): Promise<Screenshot[]> {
+  try {
+    const screenshots = await db.screenshots
+      .filter((s) => !s.projectId || s.projectId === 'current-audit')
+      .toArray();
+    return screenshots;
+  } catch (error) {
+    logger.error('Failed to get all screenshots:', error);
     throw error;
   }
 }
@@ -279,7 +291,7 @@ export async function getAllTestResults(): Promise<TestResult[]> {
   try {
     // Filter for results that belong to current audit (id='current-audit' or undefined for legacy)
     return await db.testResults
-      .filter(r => !r.projectId || r.projectId === 'current-audit')
+      .filter((r) => !r.projectId || r.projectId === 'current-audit')
       .toArray();
   } catch (error) {
     logger.error('Failed to get test results:', error);
@@ -343,7 +355,7 @@ export async function clearCurrentAudit(): Promise<void> {
       await db.projects.delete('current-audit');
       await db.testResults.clear(); // Clear all results for now as we're single-session
       // We might want to keep screenshots or handle them more carefully in a real multi-project app
-      await db.screenshots.clear(); 
+      await db.screenshots.clear();
     });
     logger.info('Current audit cleared');
   } catch (error) {
@@ -378,7 +390,7 @@ export async function addTeamMember(member: TeamMember): Promise<void> {
 
     const teamMembers = project.teamMembers || [];
     // Check if member already exists
-    if (teamMembers.some(m => m.id === member.id)) {
+    if (teamMembers.some((m) => m.id === member.id)) {
       throw new Error('Team member already exists');
     }
 
@@ -405,8 +417,8 @@ export async function updateTeamMember(member: TeamMember): Promise<void> {
     if (!project) throw new Error('No active project found');
 
     const teamMembers = project.teamMembers || [];
-    const index = teamMembers.findIndex(m => m.id === member.id);
-    
+    const index = teamMembers.findIndex((m) => m.id === member.id);
+
     if (index === -1) {
       throw new Error('Team member not found');
     }
@@ -437,7 +449,7 @@ export async function removeTeamMember(id: string): Promise<void> {
     if (!project) throw new Error('No active project found');
 
     const teamMembers = project.teamMembers || [];
-    const updatedMembers = teamMembers.filter(m => m.id !== id);
+    const updatedMembers = teamMembers.filter((m) => m.id !== id);
 
     const updatedProject = {
       ...project,
@@ -477,11 +489,11 @@ export async function createSnapshot(name: string): Promise<string> {
     // Get current results and screenshots
     const results = await getAllTestResults();
     const screenshots = await db.screenshots
-      .filter(s => !s.projectId || s.projectId === 'current-audit')
+      .filter((s) => !s.projectId || s.projectId === 'current-audit')
       .toArray();
 
     // Clone results
-    const snapshotResults = results.map(r => ({
+    const snapshotResults = results.map((r) => ({
       ...r,
       projectId: snapshotId,
       // We keep the same ID? No, IDs must be unique in the table if it's the primary key.
@@ -489,8 +501,8 @@ export async function createSnapshot(name: string): Promise<string> {
       // So we must generate new IDs for the snapshot copies.
       // But wait, if we change IDs, we break relationships (e.g. screenshots linked to result ID).
       // We need to map old result IDs to new result IDs.
-      id: crypto.randomUUID(), 
-      originalId: r.id // Optional: track original ID if needed
+      id: crypto.randomUUID(),
+      originalId: r.id, // Optional: track original ID if needed
     }));
 
     // Create map of oldResultId -> newResultId
@@ -500,11 +512,11 @@ export async function createSnapshot(name: string): Promise<string> {
     });
 
     // Clone screenshots
-    const snapshotScreenshots = screenshots.map(s => ({
+    const snapshotScreenshots = screenshots.map((s) => ({
       ...s,
       id: crypto.randomUUID(),
       projectId: snapshotId,
-      testResultId: s.testResultId ? resultIdMap.get(s.testResultId) : undefined
+      testResultId: s.testResultId ? resultIdMap.get(s.testResultId) : undefined,
     }));
 
     await db.transaction('rw', db.projects, db.testResults, db.screenshots, async () => {
@@ -544,7 +556,10 @@ export async function restoreSnapshot(snapshotId: string): Promise<void> {
 
     // Get snapshot data
     const snapshotResults = await db.testResults.where('projectId').equals(snapshotId).toArray();
-    const snapshotScreenshots = await db.screenshots.where('projectId').equals(snapshotId).toArray();
+    const snapshotScreenshots = await db.screenshots
+      .where('projectId')
+      .equals(snapshotId)
+      .toArray();
 
     // Prepare data for current audit
     // We need to generate NEW IDs again to avoid conflict if we snapshot this later?
@@ -558,10 +573,10 @@ export async function restoreSnapshot(snapshotId: string): Promise<void> {
       modifiedAt: new Date(),
     };
 
-    const newResults = snapshotResults.map(r => ({
+    const newResults = snapshotResults.map((r) => ({
       ...r,
       id: crypto.randomUUID(),
-      projectId: 'current-audit'
+      projectId: 'current-audit',
     }));
 
     const resultIdMap = new Map<string, string>();
@@ -569,11 +584,11 @@ export async function restoreSnapshot(snapshotId: string): Promise<void> {
       resultIdMap.set(r.id, newResults[index].id);
     });
 
-    const newScreenshots = snapshotScreenshots.map(s => ({
+    const newScreenshots = snapshotScreenshots.map((s) => ({
       ...s,
       id: crypto.randomUUID(),
       projectId: 'current-audit',
-      testResultId: s.testResultId ? resultIdMap.get(s.testResultId) : undefined
+      testResultId: s.testResultId ? resultIdMap.get(s.testResultId) : undefined,
     }));
 
     await db.transaction('rw', db.projects, db.testResults, db.screenshots, async () => {
@@ -582,12 +597,12 @@ export async function restoreSnapshot(snapshotId: string): Promise<void> {
       // Delete all results/screenshots belonging to current-audit
       // Since we don't have a simple index delete for filtered items, we find keys first
       const currentResultKeys = await db.testResults
-        .filter(r => !r.projectId || r.projectId === 'current-audit')
+        .filter((r) => !r.projectId || r.projectId === 'current-audit')
         .primaryKeys();
       await db.testResults.bulkDelete(currentResultKeys);
 
       const currentScreenshotKeys = await db.screenshots
-        .filter(s => !s.projectId || s.projectId === 'current-audit')
+        .filter((s) => !s.projectId || s.projectId === 'current-audit')
         .primaryKeys();
       await db.screenshots.bulkDelete(currentScreenshotKeys);
 
@@ -611,11 +626,14 @@ export async function deleteSnapshot(snapshotId: string): Promise<void> {
   try {
     await db.transaction('rw', db.projects, db.testResults, db.screenshots, async () => {
       await db.projects.delete(snapshotId);
-      
+
       const resultKeys = await db.testResults.where('projectId').equals(snapshotId).primaryKeys();
       await db.testResults.bulkDelete(resultKeys);
 
-      const screenshotKeys = await db.screenshots.where('projectId').equals(snapshotId).primaryKeys();
+      const screenshotKeys = await db.screenshots
+        .where('projectId')
+        .equals(snapshotId)
+        .primaryKeys();
       await db.screenshots.bulkDelete(screenshotKeys);
     });
     logger.info(`Snapshot deleted: ${snapshotId}`);

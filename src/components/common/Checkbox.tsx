@@ -18,10 +18,7 @@ export interface CheckboxProps {
   className?: string;
 }
 
-export const CheckboxComponent = React.forwardRef<
-  HTMLButtonElement,
-  CheckboxProps
->(
+export const CheckboxComponent = React.forwardRef<HTMLButtonElement, CheckboxProps>(
   (
     {
       label,
@@ -63,9 +60,7 @@ export const CheckboxComponent = React.forwardRef<
             name={name}
             value={value}
             aria-invalid={hasError}
-            aria-describedby={
-              [helperTextId, errorId].filter(Boolean).join(' ') || undefined
-            }
+            aria-describedby={[helperTextId, errorId].filter(Boolean).join(' ') || undefined}
           >
             <Checkbox.Indicator className="checkbox-indicator">
               <svg

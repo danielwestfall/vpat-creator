@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { toast } from '../../store/toast-store';
 import { Button, Input } from '../common';
 import type { VPATTemplate } from '../../models/template-types';
 import {
@@ -34,7 +35,7 @@ export function TemplateLibrary({ onEdit, onCreate, onApply, onClose }: Template
       setTemplates(allTemplates);
     } catch (error) {
       console.error('Failed to load templates:', error);
-      alert('Failed to load templates');
+      toast.error('Failed to load templates');
     } finally {
       setIsLoading(false);
     }
@@ -47,11 +48,11 @@ export function TemplateLibrary({ onEdit, onCreate, onApply, onClose }: Template
     try {
       await importTemplate(file);
       await loadTemplates();
-      alert('✅ Template imported successfully!');
+      toast.success('✅ Template imported successfully!');
     } catch (error) {
-      alert(`❌ Import failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      toast.error(`❌ Import failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
-    
+
     event.target.value = '';
   };
 
@@ -64,7 +65,7 @@ export function TemplateLibrary({ onEdit, onCreate, onApply, onClose }: Template
       await duplicateTemplate(id);
       await loadTemplates();
     } catch {
-      alert('Failed to duplicate template');
+      toast.error('Failed to duplicate template');
     }
   };
 
@@ -74,7 +75,7 @@ export function TemplateLibrary({ onEdit, onCreate, onApply, onClose }: Template
         await deleteTemplate(id);
         await loadTemplates();
       } catch {
-        alert('Failed to delete template');
+        toast.error('Failed to delete template');
       }
     }
   };
@@ -84,19 +85,20 @@ export function TemplateLibrary({ onEdit, onCreate, onApply, onClose }: Template
       await setDefaultTemplate(id);
       await loadTemplates();
     } catch {
-      alert('Failed to set default template');
+      toast.error('Failed to set default template');
     }
   };
 
-  const filteredTemplates = templates.filter(template =>
-    template.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    template.description.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredTemplates = templates.filter(
+    (template) =>
+      template.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      template.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
     <div className="template-library">
-      <div 
-        className="template-library__overlay" 
+      <div
+        className="template-library__overlay"
         onClick={onClose}
         role="button"
         tabIndex={-1}
@@ -104,7 +106,12 @@ export function TemplateLibrary({ onEdit, onCreate, onApply, onClose }: Template
         aria-label="Close template library"
       />
 
-      <div className="template-library__content" role="dialog" aria-modal="true" aria-labelledby="template-library-title">
+      <div
+        className="template-library__content"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="template-library-title"
+      >
         <div className="template-library__header">
           <h2 id="template-library-title">Template Library</h2>
           <button className="template-library__close" onClick={onClose} aria-label="Close">
@@ -119,7 +126,7 @@ export function TemplateLibrary({ onEdit, onCreate, onApply, onClose }: Template
             onChange={(e) => setSearchQuery(e.target.value)}
             className="template-library__search"
           />
-          
+
           <Button variant="primary" size="sm" onClick={onCreate}>
             ➕ Create New
           </Button>
@@ -147,7 +154,7 @@ export function TemplateLibrary({ onEdit, onCreate, onApply, onClose }: Template
             </div>
           ) : (
             <div className="template-library__grid">
-              {filteredTemplates.map(template => (
+              {filteredTemplates.map((template) => (
                 <div key={template.id} className="template-card">
                   <div className="template-card__header">
                     <h3 className="template-card__title">
@@ -164,8 +171,8 @@ export function TemplateLibrary({ onEdit, onCreate, onApply, onClose }: Template
                     </div>
                     <div className="template-card__detail">
                       <span className="template-card__label">Color:</span>
-                      <span 
-                        className="template-card__color" 
+                      <span
+                        className="template-card__color"
                         style={{ backgroundColor: template.styling.primaryColor }}
                       />
                     </div>
@@ -178,8 +185,8 @@ export function TemplateLibrary({ onEdit, onCreate, onApply, onClose }: Template
                   </div>
 
                   <div className="template-card__actions">
-                    <Button 
-                      variant="primary" 
+                    <Button
+                      variant="primary"
                       size="sm"
                       onClick={() => {
                         onApply(template);
@@ -188,7 +195,7 @@ export function TemplateLibrary({ onEdit, onCreate, onApply, onClose }: Template
                     >
                       Use Template
                     </Button>
-                    
+
                     <div className="template-card__secondary-actions">
                       <button
                         className="template-card__action-btn"

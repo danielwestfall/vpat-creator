@@ -29,7 +29,7 @@ export function extractBugsFromResults(
     // Try to find component if available, otherwise use default
     let componentName = defaultComponentName;
     if (components.length > 0) {
-      const component = components.find((c) => c.results.some(r => r.id === result.id));
+      const component = components.find((c) => c.results.some((r) => r.id === result.id));
       if (component) {
         componentName = component.name;
       }
@@ -97,7 +97,8 @@ export function exportBugsAsMarkdown(bugs: BugReport[]): string {
 
   // Individual bugs
   bugs.forEach((bug, index) => {
-    const severityIcon = bug.severity === 'critical' ? '🔴' : bug.severity === 'major' ? '🟠' : '🟡';
+    const severityIcon =
+      bug.severity === 'critical' ? '🔴' : bug.severity === 'major' ? '🟠' : '🟡';
 
     markdown += `## ${severityIcon} Bug #${index + 1}: ${bug.criterionName}\n\n`;
     markdown += `**Severity:** ${bug.severity.toUpperCase()}\n\n`;

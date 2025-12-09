@@ -1,5 +1,6 @@
 import type { TestResult, TeamMember, Project } from '../models/types';
 import { createLogger } from '../utils/logger';
+import { wcagService } from './wcag-service';
 
 const logger = createLogger('merge-service');
 
@@ -63,8 +64,8 @@ export function mergeAudits(
   });
 
   // Create maps for easier lookup
-  const localMap = new Map(localResults.map(r => [r.successCriterionId, r]));
-  const incomingMap = new Map(incomingResults.map(r => [r.successCriterionId, r]));
+  const localMap = new Map(localResults.map((r) => [r.successCriterionId, r]));
+  const incomingMap = new Map(incomingResults.map((r) => [r.successCriterionId, r]));
 
   const conflicts: MergeConflict[] = [];
   const autoMerged: TestResult[] = [];
@@ -86,10 +87,12 @@ export function mergeAudits(
         // Check if we can auto-resolve based on timestamp
         if (opts.preferNewer && conflict.timeDiffHours > opts.autoMergeThresholdHours) {
           // Auto-merge: use the newer one
-          const newerResult = incomingResult.testedDate && localResult.testedDate && 
+          const newerResult =
+            incomingResult.testedDate &&
+            localResult.testedDate &&
             new Date(incomingResult.testedDate) > new Date(localResult.testedDate)
-            ? incomingResult
-            : localResult;
+              ? incomingResult
+              : localResult;
           autoMerged.push(newerResult);
           logger.info(`Auto-merged ${id} (timestamp diff: ${conflict.timeDiffHours}h)`);
         } else {
@@ -140,9 +143,10 @@ function detectConflict(local: TestResult, incoming: TestResult): MergeConflict 
     status: local.conformance !== incoming.conformance,
     notes: (local.customNotes || '') !== (incoming.customNotes || ''),
     testedBy: (local.testedBy || '') !== (incoming.testedBy || ''),
-    timestamps: (local.testedDate && incoming.testedDate) 
-      ? new Date(local.testedDate).getTime() !== new Date(incoming.testedDate).getTime()
-      : false,
+    timestamps:
+      local.testedDate && incoming.testedDate
+        ? new Date(local.testedDate).getTime() !== new Date(incoming.testedDate).getTime()
+        : false,
   };
 
   // Calculate time difference in hours
@@ -163,7 +167,9 @@ function detectConflict(local: TestResult, incoming: TestResult): MergeConflict 
   if (differences.status || (differences.notes && local.customNotes && incoming.customNotes)) {
     return {
       criterionId: local.successCriterionId,
-      criterionName: local.successCriterionId, // TODO: Get actual name from mapping
+      criterionName:
+        wcagService.getSuccessCriterionById(local.successCriterionId)?.title ||
+        local.successCriterionId,
       criterionNumber: local.successCriterionId,
       local,
       incoming,

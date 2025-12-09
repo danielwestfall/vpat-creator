@@ -1,0 +1,47 @@
+﻿
+ RUN  v4.0.10 C:/Users/clean/Desktop/VPAT_Creation/vpat-creator
+
+ Γ¥» src/tests/user-workflows.test.tsx (3 tests | 1 failed | 2 skipped) 5063ms
+     Γåô Auditor (Alice) performs a full audit workflow
+     Γåô Developer (Bob) fixes a bug and updates result
+     ├ù Manager (Charlie) exports results 5058ms
+node.exe : 
+At C:\Program Files\nodejs\npx.ps1:29 
+char:3
++   & $NODE_EXE $NPX_CLI_JS $args
++   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecifie 
+   d: (:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeComma 
+   ndError
+ 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 1 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  src/tests/user-workflows.test.tsx 
+> User Workflows > Manager (Charlie) 
+exports results
+Error: Test timed out in 5000ms.
+If this is a long-running test, pass a 
+timeout value as the last argument or 
+configure it globally with "testTimeout".
+ Γ¥» 
+src/tests/user-workflows.test.tsx:235:3
+    233|   }, 30000);
+    234| 
+    235|   test('Manager (Charlie) 
+exports results', async () => {
+       |   ^
+    236|     const user = 
+userEvent.setup();
+    237|     
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 2 skipped (3)
+   Start at  22:18:41
+   Duration  14.59s (transform 3.39s, setup 814ms, collect 5.75s, tests 5.06s, environment 2.54s, prepare 45ms)
+

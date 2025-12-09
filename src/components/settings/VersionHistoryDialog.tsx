@@ -1,6 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Button, Input } from '../common';
-import { createSnapshot, getSnapshots, restoreSnapshot, deleteSnapshot } from '../../services/database';
+import {
+  createSnapshot,
+  getSnapshots,
+  restoreSnapshot,
+  deleteSnapshot,
+} from '../../services/database';
 import type { Project } from '../../models/types';
 import { toast } from '../../store/toast-store';
 import './VersionHistoryDialog.css';
@@ -51,7 +56,11 @@ export function VersionHistoryDialog({ onClose, onRestore }: VersionHistoryDialo
   };
 
   const handleRestore = async (snapshot: Project) => {
-    if (!window.confirm(`Are you sure you want to restore "${snapshot.name}"? \n\n⚠️ This will overwrite your current progress! Make sure to save a snapshot of your current work first if needed.`)) {
+    if (
+      !window.confirm(
+        `Are you sure you want to restore "${snapshot.name}"? \n\n⚠️ This will overwrite your current progress! Make sure to save a snapshot of your current work first if needed.`
+      )
+    ) {
       return;
     }
 
@@ -85,8 +94,8 @@ export function VersionHistoryDialog({ onClose, onRestore }: VersionHistoryDialo
 
   return (
     <div className="version-history-dialog">
-      <div 
-        className="version-history-dialog__overlay" 
+      <div
+        className="version-history-dialog__overlay"
         onClick={onClose}
         role="button"
         tabIndex={0}
@@ -114,8 +123,8 @@ export function VersionHistoryDialog({ onClose, onRestore }: VersionHistoryDialo
                   fullWidth
                 />
               </div>
-              <Button 
-                variant="primary" 
+              <Button
+                variant="primary"
                 onClick={handleCreateSnapshot}
                 disabled={!newSnapshotName.trim() || isCreating}
               >
@@ -124,8 +133,10 @@ export function VersionHistoryDialog({ onClose, onRestore }: VersionHistoryDialo
             </div>
           </div>
 
-          <h3 style={{ marginTop: '2rem', marginBottom: '1rem', color: '#334155' }}>Saved Versions</h3>
-          
+          <h3 style={{ marginTop: '2rem', marginBottom: '1rem', color: '#334155' }}>
+            Saved Versions
+          </h3>
+
           {isLoading && snapshots.length === 0 ? (
             <div className="workflow-loading">Loading history...</div>
           ) : snapshots.length === 0 ? (
@@ -138,22 +149,20 @@ export function VersionHistoryDialog({ onClose, onRestore }: VersionHistoryDialo
                 <div key={snapshot.id} className="version-item">
                   <div className="version-info">
                     <h4>{snapshot.name}</h4>
-                    <p className="version-date">
-                      {new Date(snapshot.modifiedAt).toLocaleString()}
-                    </p>
+                    <p className="version-date">{new Date(snapshot.modifiedAt).toLocaleString()}</p>
                   </div>
                   <div className="version-actions">
-                    <Button 
-                      variant="secondary" 
-                      size="sm" 
+                    <Button
+                      variant="secondary"
+                      size="sm"
                       onClick={() => handleRestore(snapshot)}
                       title="Restore this version (Overwrites current)"
                     >
                       Restore
                     </Button>
-                    <Button 
-                      variant="error" 
-                      size="sm" 
+                    <Button
+                      variant="error"
+                      size="sm"
                       onClick={() => handleDelete(snapshot.id)}
                       title="Delete snapshot"
                     >
@@ -166,7 +175,10 @@ export function VersionHistoryDialog({ onClose, onRestore }: VersionHistoryDialo
           )}
         </div>
 
-        <div className="version-history-dialog__footer" style={{ padding: '1.5rem', borderTop: '1px solid #e2e8f0', textAlign: 'right' }}>
+        <div
+          className="version-history-dialog__footer"
+          style={{ padding: '1.5rem', borderTop: '1px solid #e2e8f0', textAlign: 'right' }}
+        >
           <Button variant="secondary" onClick={onClose}>
             Close
           </Button>

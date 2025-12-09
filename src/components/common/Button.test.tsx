@@ -19,7 +19,7 @@ describe('Button Component', () => {
 
     render(<Button onClick={handleClick}>Click me</Button>);
     const button = screen.getByRole('button', { name: /click me/i });
-    
+
     await user.click(button);
     expect(clicked).toBe(true);
   });
@@ -52,7 +52,7 @@ describe('Button Component', () => {
   it('shows loading state', () => {
     render(<Button loading>Loading</Button>);
     const button = screen.getByRole('button');
-    
+
     expect(button).toHaveAttribute('aria-busy', 'true');
     expect(button).toBeDisabled();
   });

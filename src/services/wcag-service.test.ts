@@ -5,7 +5,7 @@ describe('WCAGService', () => {
   describe('getPrinciples', () => {
     it('returns all WCAG principles', () => {
       const principles = wcagService.getPrinciples();
-      
+
       expect(principles).toHaveLength(4);
       expect(principles[0].num).toBe('1');
       expect(principles[0].handle).toBe('Perceivable');
@@ -40,14 +40,14 @@ describe('WCAGService', () => {
   describe('getSuccessCriteriaByLevel', () => {
     it('filters by conformance level A', () => {
       const levelA = wcagService.getSuccessCriteriaByLevel('A');
-      levelA.forEach(criterion => {
+      levelA.forEach((criterion) => {
         expect(criterion.level).toBe('A');
       });
     });
 
     it('filters by conformance level AA', () => {
       const levelAA = wcagService.getSuccessCriteriaByLevel('AA');
-      levelAA.forEach(criterion => {
+      levelAA.forEach((criterion) => {
         expect(criterion.level).toBe('AA');
       });
     });
@@ -56,7 +56,7 @@ describe('WCAGService', () => {
   describe('getSuccessCriterionById', () => {
     it('returns criterion by ID', () => {
       const criterion = wcagService.getSuccessCriterionById('non-text-content');
-      
+
       expect(criterion).toBeDefined();
       expect(criterion?.num).toBe('1.1.1');
       expect(criterion?.handle).toBe('Non-text Content');
@@ -72,7 +72,7 @@ describe('WCAGService', () => {
   describe('getSuccessCriterionByNumber', () => {
     it('returns criterion by number', () => {
       const criterion = wcagService.getSuccessCriterionByNumber('1.1.1');
-      
+
       expect(criterion).toBeDefined();
       expect(criterion?.num).toBe('1.1.1');
       expect(criterion?.handle).toBe('Non-text Content');
@@ -87,9 +87,9 @@ describe('WCAGService', () => {
   describe('searchSuccessCriteria', () => {
     it('searches by handle text', () => {
       const results = wcagService.searchSuccessCriteria('text');
-      
+
       expect(results.length).toBeGreaterThan(0);
-      results.forEach(result => {
+      results.forEach((result) => {
         const handleMatch = result.handle.toLowerCase().includes('text');
         const titleMatch = result.title?.toLowerCase().includes('text');
         const numMatch = result.num.includes('text');
@@ -105,7 +105,7 @@ describe('WCAGService', () => {
     it('is case insensitive', () => {
       const lowerResults = wcagService.searchSuccessCriteria('keyboard');
       const upperResults = wcagService.searchSuccessCriteria('KEYBOARD');
-      
+
       expect(lowerResults.length).toBe(upperResults.length);
       expect(lowerResults.length).toBeGreaterThan(0);
     });
@@ -114,7 +114,7 @@ describe('WCAGService', () => {
   describe('getCountByLevel', () => {
     it('returns count for each conformance level', () => {
       const counts = wcagService.getCountByLevel();
-      
+
       expect(counts).toHaveProperty('A');
       expect(counts).toHaveProperty('AA');
       expect(counts).toHaveProperty('AAA');

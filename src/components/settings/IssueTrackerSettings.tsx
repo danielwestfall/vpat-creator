@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { issueTrackerService, type IssueTrackerConfig, type IssueTrackerType } from '../../services/issue-tracker-service';
+import {
+  issueTrackerService,
+  type IssueTrackerConfig,
+  type IssueTrackerType,
+} from '../../services/issue-tracker-service';
 import { Button, Input, Select } from '../common';
 import { toast } from '../../store/toast-store';
 import './IssueTrackerSettings.css';
@@ -18,7 +22,7 @@ export const IssueTrackerSettings: React.FC<IssueTrackerSettingsProps> = ({ open
   const [config, setConfig] = useState<IssueTrackerConfig>(issueTrackerService.getConfig());
   const [isValidating, setIsValidating] = useState(false);
   const [validationStatus, setValidationStatus] = useState<'none' | 'success' | 'error'>('none');
-  
+
   // Asana specific state
   const [asanaWorkspaces, setAsanaWorkspaces] = useState<AsanaResource[]>([]);
   const [asanaProjects, setAsanaProjects] = useState<AsanaResource[]>([]);
@@ -32,7 +36,7 @@ export const IssueTrackerSettings: React.FC<IssueTrackerSettingsProps> = ({ open
   }, [open]);
 
   const handleTypeChange = (type: IssueTrackerType) => {
-    setConfig(prev => ({ ...prev, type }));
+    setConfig((prev) => ({ ...prev, type }));
     setValidationStatus('none');
   };
 
@@ -72,7 +76,12 @@ export const IssueTrackerSettings: React.FC<IssueTrackerSettingsProps> = ({ open
         setValidationStatus('success');
         toast.success('Successfully connected to Asana!');
       } else if (config.type === 'jira') {
-        if (!config.jiraDomain || !config.jiraEmail || !config.jiraApiToken || !config.jiraProjectKey) {
+        if (
+          !config.jiraDomain ||
+          !config.jiraEmail ||
+          !config.jiraApiToken ||
+          !config.jiraProjectKey
+        ) {
           toast.error('Please fill in all Jira fields');
           setValidationStatus('error');
           return;
@@ -101,16 +110,16 @@ export const IssueTrackerSettings: React.FC<IssueTrackerSettingsProps> = ({ open
     try {
       const workspaces = await issueTrackerService.getAsanaWorkspaces(token);
       setAsanaWorkspaces(workspaces);
-      
+
       // If we have a workspace selected (or default to first), fetch projects
       const workspaceId = config.asanaWorkspaceId || workspaces[0]?.gid;
       if (workspaceId) {
         const projects = await issueTrackerService.getAsanaProjects(token, workspaceId);
         setAsanaProjects(projects);
-        
+
         // Update config with default workspace if not set
         if (!config.asanaWorkspaceId) {
-          setConfig(prev => ({ ...prev, asanaWorkspaceId: workspaceId }));
+          setConfig((prev) => ({ ...prev, asanaWorkspaceId: workspaceId }));
         }
       }
     } catch (error) {
@@ -124,7 +133,8 @@ export const IssueTrackerSettings: React.FC<IssueTrackerSettingsProps> = ({ open
   // Fetch Asana projects when workspace changes
   useEffect(() => {
     if (config.type === 'asana' && config.asanaToken && config.asanaWorkspaceId) {
-      issueTrackerService.getAsanaProjects(config.asanaToken, config.asanaWorkspaceId)
+      issueTrackerService
+        .getAsanaProjects(config.asanaToken, config.asanaWorkspaceId)
         .then(setAsanaProjects)
         .catch(console.error);
     }
@@ -136,9 +146,9 @@ export const IssueTrackerSettings: React.FC<IssueTrackerSettingsProps> = ({ open
     <div className="modal-overlay">
       <div className="modal-content issue-tracker-settings">
         <h2>Issue Tracker Integration</h2>
-        
+
         <div className="tracker-selector">
-          <button 
+          <button
             type="button"
             className={`tracker-option ${config.type === 'github' ? 'selected' : ''}`}
             onClick={() => handleTypeChange('github')}
@@ -147,7 +157,7 @@ export const IssueTrackerSettings: React.FC<IssueTrackerSettingsProps> = ({ open
             <span style={{ fontSize: '1.5rem', display: 'block', marginBottom: '0.5rem' }}>🐙</span>
             GitHub
           </button>
-          <button 
+          <button
             type="button"
             className={`tracker-option ${config.type === 'asana' ? 'selected' : ''}`}
             onClick={() => handleTypeChange('asana')}
@@ -156,7 +166,7 @@ export const IssueTrackerSettings: React.FC<IssueTrackerSettingsProps> = ({ open
             <span style={{ fontSize: '1.5rem', display: 'block', marginBottom: '0.5rem' }}>⚪</span>
             Asana
           </button>
-          <button 
+          <button
             type="button"
             className={`tracker-option ${config.type === 'jira' ? 'selected' : ''}`}
             onClick={() => handleTypeChange('jira')}
@@ -170,10 +180,10 @@ export const IssueTrackerSettings: React.FC<IssueTrackerSettingsProps> = ({ open
         <div className="config-form">
           <div className="form-group">
             <label className="flex items-center gap-2">
-              <input 
-                type="checkbox" 
-                checked={config.enabled} 
-                onChange={(e) => setConfig(prev => ({ ...prev, enabled: e.target.checked }))}
+              <input
+                type="checkbox"
+                checked={config.enabled}
+                onChange={(e) => setConfig((prev) => ({ ...prev, enabled: e.target.checked }))}
               />
               Enable Integration
             </label>
@@ -185,7 +195,7 @@ export const IssueTrackerSettings: React.FC<IssueTrackerSettingsProps> = ({ open
                 label="Personal Access Token (PAT)"
                 type="password"
                 value={config.githubToken || ''}
-                onChange={(e) => setConfig(prev => ({ ...prev, githubToken: e.target.value }))}
+                onChange={(e) => setConfig((prev) => ({ ...prev, githubToken: e.target.value }))}
                 placeholder="ghp_..."
                 helperText="Token needs 'repo' scope"
               />
@@ -193,14 +203,14 @@ export const IssueTrackerSettings: React.FC<IssueTrackerSettingsProps> = ({ open
                 <Input
                   label="Owner / Organization"
                   value={config.githubOwner || ''}
-                  onChange={(e) => setConfig(prev => ({ ...prev, githubOwner: e.target.value }))}
+                  onChange={(e) => setConfig((prev) => ({ ...prev, githubOwner: e.target.value }))}
                   placeholder="e.g., microsoft"
                   fullWidth
                 />
                 <Input
                   label="Repository Name"
                   value={config.githubRepo || ''}
-                  onChange={(e) => setConfig(prev => ({ ...prev, githubRepo: e.target.value }))}
+                  onChange={(e) => setConfig((prev) => ({ ...prev, githubRepo: e.target.value }))}
                   placeholder="e.g., vscode"
                   fullWidth
                 />
@@ -214,17 +224,17 @@ export const IssueTrackerSettings: React.FC<IssueTrackerSettingsProps> = ({ open
                 label="Personal Access Token"
                 type="password"
                 value={config.asanaToken || ''}
-                onChange={(e) => setConfig(prev => ({ ...prev, asanaToken: e.target.value }))}
+                onChange={(e) => setConfig((prev) => ({ ...prev, asanaToken: e.target.value }))}
                 placeholder="1/..."
                 helperText="Get this from Asana Developer Console"
               />
-              
+
               {asanaWorkspaces.length > 0 && (
                 <Select
                   label="Workspace"
                   value={config.asanaWorkspaceId || ''}
-                  onValueChange={(val) => setConfig(prev => ({ ...prev, asanaWorkspaceId: val }))}
-                  options={asanaWorkspaces.map(ws => ({ value: ws.gid, label: ws.name }))}
+                  onValueChange={(val) => setConfig((prev) => ({ ...prev, asanaWorkspaceId: val }))}
+                  options={asanaWorkspaces.map((ws) => ({ value: ws.gid, label: ws.name }))}
                   fullWidth
                 />
               )}
@@ -233,16 +243,16 @@ export const IssueTrackerSettings: React.FC<IssueTrackerSettingsProps> = ({ open
                 <Select
                   label="Project"
                   value={config.asanaProjectId || ''}
-                  onValueChange={(val) => setConfig(prev => ({ ...prev, asanaProjectId: val }))}
-                  options={asanaProjects.map(p => ({ value: p.gid, label: p.name }))}
+                  onValueChange={(val) => setConfig((prev) => ({ ...prev, asanaProjectId: val }))}
+                  options={asanaProjects.map((p) => ({ value: p.gid, label: p.name }))}
                   fullWidth
                 />
               )}
-              
+
               {config.asanaToken && asanaWorkspaces.length === 0 && (
-                <Button 
-                  onClick={() => fetchAsanaData(config.asanaToken!)} 
-                  variant="secondary" 
+                <Button
+                  onClick={() => fetchAsanaData(config.asanaToken!)}
+                  variant="secondary"
                   size="sm"
                   loading={isLoadingAsanaData}
                 >
@@ -257,7 +267,7 @@ export const IssueTrackerSettings: React.FC<IssueTrackerSettingsProps> = ({ open
               <Input
                 label="Jira Domain"
                 value={config.jiraDomain || ''}
-                onChange={(e) => setConfig(prev => ({ ...prev, jiraDomain: e.target.value }))}
+                onChange={(e) => setConfig((prev) => ({ ...prev, jiraDomain: e.target.value }))}
                 placeholder="your-company.atlassian.net"
                 helperText="The URL of your Jira Cloud instance"
                 fullWidth
@@ -266,7 +276,7 @@ export const IssueTrackerSettings: React.FC<IssueTrackerSettingsProps> = ({ open
                 label="Email Address"
                 type="email"
                 value={config.jiraEmail || ''}
-                onChange={(e) => setConfig(prev => ({ ...prev, jiraEmail: e.target.value }))}
+                onChange={(e) => setConfig((prev) => ({ ...prev, jiraEmail: e.target.value }))}
                 placeholder="you@company.com"
                 fullWidth
               />
@@ -274,7 +284,7 @@ export const IssueTrackerSettings: React.FC<IssueTrackerSettingsProps> = ({ open
                 label="API Token"
                 type="password"
                 value={config.jiraApiToken || ''}
-                onChange={(e) => setConfig(prev => ({ ...prev, jiraApiToken: e.target.value }))}
+                onChange={(e) => setConfig((prev) => ({ ...prev, jiraApiToken: e.target.value }))}
                 placeholder="Token from Atlassian Account Settings"
                 helperText="Create at: id.atlassian.com/manage-profile/security/api-tokens"
                 fullWidth
@@ -283,14 +293,18 @@ export const IssueTrackerSettings: React.FC<IssueTrackerSettingsProps> = ({ open
                 <Input
                   label="Project Key"
                   value={config.jiraProjectKey || ''}
-                  onChange={(e) => setConfig(prev => ({ ...prev, jiraProjectKey: e.target.value }))}
+                  onChange={(e) =>
+                    setConfig((prev) => ({ ...prev, jiraProjectKey: e.target.value }))
+                  }
                   placeholder="e.g., PROJ"
                   fullWidth
                 />
                 <Input
                   label="Issue Type"
                   value={config.jiraIssueType || 'Bug'}
-                  onChange={(e) => setConfig(prev => ({ ...prev, jiraIssueType: e.target.value }))}
+                  onChange={(e) =>
+                    setConfig((prev) => ({ ...prev, jiraIssueType: e.target.value }))
+                  }
                   placeholder="Bug"
                   fullWidth
                 />

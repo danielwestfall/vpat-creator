@@ -2,23 +2,7 @@ import React from 'react';
 import { Modal, ModalFooter } from '../common/Modal';
 import { Button, Checkbox, Input, Select } from '../common';
 
-export interface ShortcutConfig {
-  enabled: boolean;
-  next: string;
-  previous: string;
-  pass: string;
-  fail: string;
-  na: string;
-}
-
-export const DEFAULT_SHORTCUTS: ShortcutConfig = {
-  enabled: true,
-  next: 'ArrowRight',
-  previous: 'ArrowLeft',
-  pass: 'p',
-  fail: 'f',
-  na: 'n',
-};
+import { type ShortcutConfig } from '../../models/shortcuts';
 
 interface ShortcutSettingsProps {
   open: boolean;
@@ -61,16 +45,20 @@ export const ShortcutSettings: React.FC<ShortcutSettingsProps> = ({
       size="md"
     >
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-        <div style={{ 
-          backgroundColor: 'var(--color-primary-light, #eef2ff)', 
-          padding: '1rem', 
-          borderRadius: '0.5rem', 
-          border: '1px solid var(--color-primary-light, #e0e7ff)',
-          color: 'var(--color-primary-dark, #3730a3)',
-          fontSize: '0.875rem'
-        }}>
+        <div
+          style={{
+            backgroundColor: 'var(--color-primary-light, #eef2ff)',
+            padding: '1rem',
+            borderRadius: '0.5rem',
+            border: '1px solid var(--color-primary-light, #e0e7ff)',
+            color: 'var(--color-primary-dark, #3730a3)',
+            fontSize: '0.875rem',
+          }}
+        >
           <p style={{ margin: 0 }}>
-            <strong>Note for Screen Reader Users:</strong> Shortcuts use the <strong>Alt</strong> modifier key to avoid conflicts with common screen reader commands. You can disable them entirely below if they interfere with your workflow.
+            <strong>Note for Screen Reader Users:</strong> Shortcuts use the <strong>Alt</strong>{' '}
+            modifier key to avoid conflicts with common screen reader commands. You can disable them
+            entirely below if they interfere with your workflow.
           </p>
         </div>
 
@@ -80,38 +68,56 @@ export const ShortcutSettings: React.FC<ShortcutSettingsProps> = ({
           onCheckedChange={(checked) => handleChange('enabled', checked)}
         />
 
-        <div style={{ 
-          display: 'flex', 
-          flexDirection: 'column', 
-          gap: '1rem',
-          opacity: config.enabled ? 1 : 0.5,
-          pointerEvents: config.enabled ? 'auto' : 'none',
-          transition: 'opacity 0.2s'
-        }}>
-          <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '1rem', fontWeight: 600, borderBottom: '1px solid var(--color-border)', paddingBottom: '0.5rem' }}>
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '1rem',
+            opacity: config.enabled ? 1 : 0.5,
+            pointerEvents: config.enabled ? 'auto' : 'none',
+            transition: 'opacity 0.2s',
+          }}
+        >
+          <h4
+            style={{
+              margin: '0 0 0.5rem 0',
+              fontSize: '1rem',
+              fontWeight: 600,
+              borderBottom: '1px solid var(--color-border)',
+              paddingBottom: '0.5rem',
+            }}
+          >
             Navigation (Alt + Key)
           </h4>
-          
+
           <Select
             label="Navigation Style"
             value={config.next === 'ArrowRight' ? 'ArrowRight' : config.next === 'n' ? 'n' : 'j'}
             onValueChange={(val) => {
-                if (val === 'ArrowRight') {
-                    setConfig(prev => ({ ...prev, next: 'ArrowRight', previous: 'ArrowLeft' }));
-                } else if (val === 'n') {
-                    setConfig(prev => ({ ...prev, next: 'n', previous: 'p' }));
-                } else if (val === 'j') {
-                    setConfig(prev => ({ ...prev, next: 'j', previous: 'k' }));
-                }
+              if (val === 'ArrowRight') {
+                setConfig((prev) => ({ ...prev, next: 'ArrowRight', previous: 'ArrowLeft' }));
+              } else if (val === 'n') {
+                setConfig((prev) => ({ ...prev, next: 'n', previous: 'p' }));
+              } else if (val === 'j') {
+                setConfig((prev) => ({ ...prev, next: 'j', previous: 'k' }));
+              }
             }}
             options={navigationOptions}
             fullWidth
           />
 
-          <h4 style={{ margin: '1rem 0 0.5rem 0', fontSize: '1rem', fontWeight: 600, borderBottom: '1px solid var(--color-border)', paddingBottom: '0.5rem' }}>
+          <h4
+            style={{
+              margin: '1rem 0 0.5rem 0',
+              fontSize: '1rem',
+              fontWeight: 600,
+              borderBottom: '1px solid var(--color-border)',
+              paddingBottom: '0.5rem',
+            }}
+          >
             Status Marking (Alt + Key)
           </h4>
-          
+
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
             <Input
               label="Pass / Supports"
@@ -138,7 +144,9 @@ export const ShortcutSettings: React.FC<ShortcutSettingsProps> = ({
         </div>
       </div>
       <ModalFooter>
-        <Button variant="secondary" onClick={onClose}>Cancel</Button>
+        <Button variant="secondary" onClick={onClose}>
+          Cancel
+        </Button>
         <Button onClick={() => onSave(config)}>Save Settings</Button>
       </ModalFooter>
     </Modal>

@@ -45,8 +45,7 @@ export const TestingSchedulePreview: React.FC = () => {
       const markdown = testingScheduleService.exportSCScheduleAsMarkdown(scSchedule);
       downloadFile(markdown, 'wcag-testing-schedule-sc.md', 'text/markdown');
     } else if (type === 'component' && componentSchedule) {
-      const markdown =
-        testingScheduleService.exportComponentScheduleAsMarkdown(componentSchedule);
+      const markdown = testingScheduleService.exportComponentScheduleAsMarkdown(componentSchedule);
       downloadFile(markdown, 'wcag-testing-schedule-component.md', 'text/markdown');
     }
   };
@@ -153,39 +152,61 @@ export const TestingSchedulePreview: React.FC = () => {
                 <div className="step-number">1</div>
                 <div className="step-content">
                   <h4>Go to the Workflow Tab</h4>
-                  <p>Click the <strong>"Workflow"</strong> button in the top navigation bar</p>
+                  <p>
+                    Click the <strong>"Workflow"</strong> button in the top navigation bar
+                  </p>
                 </div>
               </div>
               <div className="instruction-step">
                 <div className="step-number">2</div>
                 <div className="step-content">
                   <h4>Start a New Audit</h4>
-                  <p>Click <strong>"Start New Audit"</strong> and configure your audit scope (WCAG version, conformance levels, etc.)</p>
+                  <p>
+                    Click <strong>"Start New Audit"</strong> and configure your audit scope (WCAG
+                    version, conformance levels, etc.)
+                  </p>
                 </div>
               </div>
               <div className="instruction-step">
                 <div className="step-number">3</div>
                 <div className="step-content">
                   <h4>Begin Testing</h4>
-                  <p>Work through each success criterion, recording conformance status, notes, and screenshots</p>
+                  <p>
+                    Work through each success criterion, recording conformance status, notes, and
+                    screenshots
+                  </p>
                 </div>
               </div>
               <div className="instruction-step">
                 <div className="step-number">4</div>
                 <div className="step-content">
                   <h4>Export Your Results</h4>
-                  <p>Generate a VPAT PDF report, share with team members, or export JSON for backup</p>
+                  <p>
+                    Generate a VPAT PDF report, share with team members, or export JSON for backup
+                  </p>
                 </div>
               </div>
             </div>
             <div className="getting-started-features">
               <h4>✨ Key Features</h4>
               <ul>
-                <li><strong>Auto-save:</strong> Your progress is automatically saved in your browser</li>
-                <li><strong>Team Collaboration:</strong> Assign test criteria to team members and share audits</li>
-                <li><strong>Screenshots:</strong> Capture and annotate evidence directly in the app</li>
-                <li><strong>Bug Reports:</strong> Automatically generate bug reports from failed criteria</li>
-                <li><strong>Export Options:</strong> PDF VPAT, JSON backup, or Markdown formats</li>
+                <li>
+                  <strong>Auto-save:</strong> Your progress is automatically saved in your browser
+                </li>
+                <li>
+                  <strong>Team Collaboration:</strong> Assign test criteria to team members and
+                  share audits
+                </li>
+                <li>
+                  <strong>Screenshots:</strong> Capture and annotate evidence directly in the app
+                </li>
+                <li>
+                  <strong>Bug Reports:</strong> Automatically generate bug reports from failed
+                  criteria
+                </li>
+                <li>
+                  <strong>Export Options:</strong> PDF VPAT, JSON backup, or Markdown formats
+                </li>
               </ul>
             </div>
           </div>

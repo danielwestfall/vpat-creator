@@ -6,18 +6,13 @@
 
 export type ConformanceLevel = 'A' | 'AA' | 'AAA';
 
-export type ConformanceStatus = 
-  | 'Supports' 
-  | 'Partially Supports' 
-  | 'Does Not Support' 
+export type ConformanceStatus =
+  | 'Supports'
+  | 'Partially Supports'
+  | 'Does Not Support'
   | 'Not Applicable';
 
-export type BarrierType = 
-  | 'Hearing' 
-  | 'Vision' 
-  | 'Motor' 
-  | 'Cognitive' 
-  | 'Speech';
+export type BarrierType = 'Hearing' | 'Vision' | 'Motor' | 'Cognitive' | 'Speech';
 
 // ============================================================================
 // FUNCTIONAL BARRIERS (508 Compliance)
@@ -350,4 +345,30 @@ export interface NavigationState {
   currentPage: string;
   previousPage?: string;
   hasUnsavedChanges: boolean;
+}
+
+// ============================================================================
+// UI COMPONENT TYPES
+// ============================================================================
+
+export interface CustomTechnique {
+  checked: boolean;
+  description: string;
+}
+
+export interface UITestResult {
+  scId: string;
+  status: ConformanceStatus | 'Not Tested';
+  notes: string;
+  testedBy: string;
+  testedDate: Date;
+  techniquesUsed: string[];
+  failuresFound: string[];
+  customTechniques: Array<{ description: string }>;
+  toolsUsed: string;
+  screenshots: string[];
+  needsRecheck?: boolean;
+  customColumnValues?: Record<string, string>;
+  assignedTo?: string;
+  history?: unknown[];
 }

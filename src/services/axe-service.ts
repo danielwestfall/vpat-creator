@@ -46,15 +46,15 @@ const AXE_TO_WCAG_MAP: Record<string, string[]> = {
   'html-lang-valid': ['3.1.1'],
   'image-redundant-alt': ['1.1.1'],
   'input-button-name': ['4.1.2'],
-  'label': ['1.3.1', '3.3.2', '4.1.2'],
+  label: ['1.3.1', '3.3.2', '4.1.2'],
   'link-name': ['2.4.4', '4.1.2'],
-  'list': ['1.3.1'],
-  'listitem': ['1.3.1'],
+  list: ['1.3.1'],
+  listitem: ['1.3.1'],
   'meta-viewport': ['1.4.4'],
   'nested-interactive': ['4.1.2'],
   'select-name': ['4.1.2'],
   'skip-link': ['2.4.1'],
-  'tabindex': ['2.1.1'],
+  tabindex: ['2.1.1'],
   'table-duplicate-name': ['1.3.1'],
   'table-fake-caption': ['1.3.1'],
   'td-headers-attr': ['1.3.1'],
@@ -71,12 +71,12 @@ export const axeService = {
     const container = document.createElement('div');
     container.id = 'axe-test-container';
     // Sanitize HTML to prevent script execution but keep structure
-    container.innerHTML = DOMPurify.sanitize(html, { 
-      WHOLE_DOCUMENT: false, 
+    container.innerHTML = DOMPurify.sanitize(html, {
+      WHOLE_DOCUMENT: false,
       ADD_TAGS: ['head', 'body', 'title', 'meta', 'style'], // Allow some structure tags
-      ADD_ATTR: ['aria-label', 'aria-labelledby', 'aria-describedby', 'role', 'tabindex'] // Ensure ARIA is kept
+      ADD_ATTR: ['aria-label', 'aria-labelledby', 'aria-describedby', 'role', 'tabindex'], // Ensure ARIA is kept
     });
-    
+
     // Hide it visually but keep it in DOM for axe to work
     // Note: axe needs the element to be "visible" for some rules (like color contrast)
     // So we position it off-screen instead of display: none
@@ -85,16 +85,16 @@ export const axeService = {
     container.style.top = '0';
     container.style.width = '1024px'; // Simulate desktop width
     container.style.backgroundColor = '#ffffff'; // Default background
-    
+
     document.body.appendChild(container);
 
     try {
       const results = await axe.run(container, {
         runOnly: {
           type: 'tag',
-          values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']
+          values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'],
         },
-        reporter: 'v2'
+        reporter: 'v2',
       });
 
       return {
@@ -102,7 +102,7 @@ export const axeService = {
         passes: results.passes,
         incomplete: results.incomplete,
         inapplicable: results.inapplicable,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
     } finally {
       // Cleanup
@@ -117,26 +117,26 @@ export const axeService = {
     const mappedResults: MappedResult[] = [];
 
     // Process Violations (Failures)
-    results.violations.forEach(violation => {
+    results.violations.forEach((violation) => {
       const scNumbers = AXE_TO_WCAG_MAP[violation.id];
       if (scNumbers) {
-        scNumbers.forEach(scNumber => {
+        scNumbers.forEach((scNumber) => {
           mappedResults.push({
             scNumber,
             status: 'Does Not Support',
             reason: `Automated failure: ${violation.help} (${violation.id}). ${violation.nodes.length} occurrences found.`,
-            ruleId: violation.id
+            ruleId: violation.id,
           });
         });
       }
     });
 
     // Process Passes (Supports)
-    // Note: A pass in axe doesn't always mean full WCAG compliance for an SC, 
+    // Note: A pass in axe doesn't always mean full WCAG compliance for an SC,
     // but it's a good indicator for specific techniques.
     // We'll be conservative and only map passes if we're sure.
     // For now, we might just use violations to flag issues.
-    
+
     return mappedResults;
-  }
+  },
 };

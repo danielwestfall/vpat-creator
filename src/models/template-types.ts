@@ -63,7 +63,7 @@ export interface VPATTemplate {
   isDefault: boolean;
   createdAt: Date;
   modifiedAt: Date;
-  
+
   header: VPATTemplateHeader;
   sections: VPATTemplateSections;
   styling: VPATTemplateStyling;
@@ -107,7 +107,8 @@ export const DEFAULT_TEMPLATES: Omit<VPATTemplate, 'id' | 'createdAt' | 'modifie
       },
       legalDisclaimer: {
         enabled: true,
-        content: 'This document is provided for information purposes only and the contents hereof are subject to change without notice. This document is not warranted to be error-free, nor subject to any other warranties or conditions.',
+        content:
+          'This document is provided for information purposes only and the contents hereof are subject to change without notice. This document is not warranted to be error-free, nor subject to any other warranties or conditions.',
       },
     },
     styling: {
@@ -193,7 +194,8 @@ export const DEFAULT_TEMPLATES: Omit<VPATTemplate, 'id' | 'createdAt' | 'modifie
       executiveSummary: {
         enabled: true,
         title: 'Executive Summary',
-        defaultContent: 'This report documents the accessibility conformance evaluation results for our product.',
+        defaultContent:
+          'This report documents the accessibility conformance evaluation results for our product.',
       },
       productInfo: {
         enabled: true,
@@ -209,7 +211,8 @@ export const DEFAULT_TEMPLATES: Omit<VPATTemplate, 'id' | 'createdAt' | 'modifie
       },
       legalDisclaimer: {
         enabled: true,
-        content: 'This Voluntary Product Accessibility Template® (VPAT®) is provided for information purposes only. The information contained in this document is subject to change without notice and does not represent a commitment on the part of the vendor.',
+        content:
+          'This Voluntary Product Accessibility Template® (VPAT®) is provided for information purposes only. The information contained in this document is subject to change without notice and does not represent a commitment on the part of the vendor.',
       },
     },
     styling: {

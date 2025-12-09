@@ -31,9 +31,7 @@ export const Toast: React.FC<ToastProps> = ({
       }}
     >
       <div className="toast__content">
-        <ToastPrimitive.Title className="toast__title">
-          {title}
-        </ToastPrimitive.Title>
+        <ToastPrimitive.Title className="toast__title">{title}</ToastPrimitive.Title>
         {description && (
           <ToastPrimitive.Description className="toast__description">
             {description}

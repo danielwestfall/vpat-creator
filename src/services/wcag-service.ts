@@ -27,11 +27,11 @@ class WCAGService {
       const customCriteriaJson = localStorage.getItem('vpat_custom_criteria');
       if (customCriteriaJson) {
         const customCriteria = JSON.parse(customCriteriaJson) as WCAGSuccessCriterion[];
-        
+
         if (customCriteria.length > 0) {
           // Check if Custom Principle exists
-          let customPrinciple = this.data.principles.find(p => p.id === 'custom');
-          
+          let customPrinciple = this.data.principles.find((p) => p.id === 'custom');
+
           if (!customPrinciple) {
             customPrinciple = {
               id: 'custom',
@@ -40,15 +40,17 @@ class WCAGService {
               title: 'Custom Criteria',
               content: 'User-defined success criteria',
               versions: ['2.2'],
-              guidelines: [{
-                id: 'custom-guideline',
-                num: '5.1',
-                handle: 'Custom Guidelines',
-                title: 'Custom Guidelines',
-                content: 'User-defined guidelines',
-                versions: ['2.2'],
-                successcriteria: []
-              }]
+              guidelines: [
+                {
+                  id: 'custom-guideline',
+                  num: '5.1',
+                  handle: 'Custom Guidelines',
+                  title: 'Custom Guidelines',
+                  content: 'User-defined guidelines',
+                  versions: ['2.2'],
+                  successcriteria: [],
+                },
+              ],
             };
             this.data.principles.push(customPrinciple);
           }
@@ -76,11 +78,13 @@ class WCAGService {
 
       // Get current custom criteria
       const customCriteriaJson = localStorage.getItem('vpat_custom_criteria');
-      const customCriteria = customCriteriaJson ? JSON.parse(customCriteriaJson) as WCAGSuccessCriterion[] : [];
-      
+      const customCriteria = customCriteriaJson
+        ? (JSON.parse(customCriteriaJson) as WCAGSuccessCriterion[])
+        : [];
+
       customCriteria.push(criterion);
       localStorage.setItem('vpat_custom_criteria', JSON.stringify(customCriteria));
-      
+
       // Reload data
       this.loadCustomCriteria();
     } catch (error) {
@@ -97,9 +101,9 @@ class WCAGService {
       const customCriteriaJson = localStorage.getItem('vpat_custom_criteria');
       if (customCriteriaJson) {
         let customCriteria = JSON.parse(customCriteriaJson) as WCAGSuccessCriterion[];
-        customCriteria = customCriteria.filter(c => c.id !== id);
+        customCriteria = customCriteria.filter((c) => c.id !== id);
         localStorage.setItem('vpat_custom_criteria', JSON.stringify(customCriteria));
-        
+
         // Reload data - simpler to just reset and reload
         this.data = JSON.parse(JSON.stringify(wcagData)) as WCAGData;
         this.loadCustomCriteria();
@@ -146,9 +150,7 @@ class WCAGService {
    * Get all success criteria
    */
   getAllSuccessCriteria(): WCAGSuccessCriterion[] {
-    return this.data.principles.flatMap((p) =>
-      p.guidelines.flatMap((g) => g.successcriteria)
-    );
+    return this.data.principles.flatMap((p) => p.guidelines.flatMap((g) => g.successcriteria));
   }
 
   /**
@@ -166,10 +168,8 @@ class WCAGService {
     const levels: ConformanceLevel[] = ['A', 'AA', 'AAA'];
     const maxIndex = levels.indexOf(level);
     const includedLevels = levels.slice(0, maxIndex + 1);
-    
-    return this.getAllSuccessCriteria().filter((sc) =>
-      includedLevels.includes(sc.level)
-    );
+
+    return this.getAllSuccessCriteria().filter((sc) => includedLevels.includes(sc.level));
   }
 
   /**
@@ -276,7 +276,8 @@ class WCAGService {
    * Group success criteria by guideline
    */
   getSuccessCriteriaGroupedByGuideline() {
-    const grouped: Record<string, { guideline: WCAGGuideline; criteria: WCAGSuccessCriterion[] }> = {};
+    const grouped: Record<string, { guideline: WCAGGuideline; criteria: WCAGSuccessCriterion[] }> =
+      {};
 
     for (const principle of this.data.principles) {
       for (const guideline of principle.guidelines) {

@@ -9,7 +9,7 @@ export interface SelectOption {
   disabled?: boolean;
 }
 
-export interface SelectProps {
+export interface SelectProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   label?: string;
   helperText?: string;
   error?: string;
@@ -41,6 +41,7 @@ export const SelectComponent = React.forwardRef<HTMLButtonElement, SelectProps>(
       disabled,
       id,
       className = '',
+      ...props
     },
     ref
   ) => {
@@ -51,11 +52,7 @@ export const SelectComponent = React.forwardRef<HTMLButtonElement, SelectProps>(
 
     const hasError = Boolean(error);
 
-    const wrapperClasses = [
-      'select-wrapper',
-      fullWidth && 'select-wrapper--full-width',
-      className,
-    ]
+    const wrapperClasses = ['select-wrapper', fullWidth && 'select-wrapper--full-width', className]
       .filter(Boolean)
       .join(' ');
 
@@ -83,9 +80,8 @@ export const SelectComponent = React.forwardRef<HTMLButtonElement, SelectProps>(
             id={selectId}
             className={`select-trigger ${hasError ? 'select-trigger--error' : ''}`}
             aria-invalid={hasError}
-            aria-describedby={
-              [helperTextId, errorId].filter(Boolean).join(' ') || undefined
-            }
+            aria-describedby={[helperTextId, errorId].filter(Boolean).join(' ') || undefined}
+            {...props}
           >
             <Select.Value placeholder={placeholder} />
             <Select.Icon className="select-icon">

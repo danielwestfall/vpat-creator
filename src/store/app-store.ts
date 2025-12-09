@@ -130,15 +130,10 @@ export const useAppStore = create<AppState>()(
 
         // UI actions
         toggleSidebar: () =>
-          set(
-            (state) => ({ isSidebarOpen: !state.isSidebarOpen }),
-            false,
-            'toggleSidebar'
-          ),
+          set((state) => ({ isSidebarOpen: !state.isSidebarOpen }), false, 'toggleSidebar'),
 
         // Loading actions
-        setIsLoading: (loading) =>
-          set({ isLoading: loading }, false, 'setIsLoading'),
+        setIsLoading: (loading) => set({ isLoading: loading }, false, 'setIsLoading'),
 
         // Error actions
         setError: (error) => set({ error }, false, 'setError'),
@@ -168,14 +163,11 @@ export const useAppStore = create<AppState>()(
 // SELECTOR HOOKS (for optimized re-renders)
 // ============================================================================
 
-export const useCurrentProject = () =>
-  useAppStore((state) => state.currentProject);
+export const useCurrentProject = () => useAppStore((state) => state.currentProject);
 
-export const useCurrentComponent = () =>
-  useAppStore((state) => state.currentComponent);
+export const useCurrentComponent = () => useAppStore((state) => state.currentComponent);
 
-export const useTestingProgress = () =>
-  useAppStore((state) => state.testingProgress);
+export const useTestingProgress = () => useAppStore((state) => state.testingProgress);
 
 export const useNavigation = () => useAppStore((state) => state.navigation);
 

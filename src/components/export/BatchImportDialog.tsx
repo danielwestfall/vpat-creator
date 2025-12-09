@@ -25,7 +25,7 @@ export function BatchImportDialog({ onClose, onImport }: BatchImportDialogProps)
       console.error('Import failed:', error);
       setImportResult({
         success: false,
-        errors: ['Unexpected error during import']
+        errors: ['Unexpected error during import'],
       });
     } finally {
       setIsLoading(false);
@@ -41,8 +41,8 @@ export function BatchImportDialog({ onClose, onImport }: BatchImportDialogProps)
 
   return (
     <div className="batch-import-dialog">
-      <div 
-        className="batch-import-dialog__overlay" 
+      <div
+        className="batch-import-dialog__overlay"
         onClick={onClose}
         role="button"
         tabIndex={0}
@@ -65,7 +65,7 @@ export function BatchImportDialog({ onClose, onImport }: BatchImportDialogProps)
                 <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📊</div>
                 <h3>Upload CSV File</h3>
                 <p style={{ color: '#64748b' }}>
-                  Select a CSV file to import test results. 
+                  Select a CSV file to import test results.
                   <br />
                   <small>Required columns: "SC Number", "Conformance Status"</small>
                 </p>
@@ -121,8 +121,8 @@ export function BatchImportDialog({ onClose, onImport }: BatchImportDialogProps)
               )}
 
               <p style={{ fontSize: '0.875rem', color: '#64748b', marginTop: '1rem' }}>
-                Clicking "Import" will merge these results into your current audit. 
-                Existing results for the same criteria will be overwritten.
+                Clicking "Import" will merge these results into your current audit. Existing results
+                for the same criteria will be overwritten.
               </p>
             </>
           )}

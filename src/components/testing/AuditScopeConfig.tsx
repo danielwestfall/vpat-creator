@@ -151,7 +151,8 @@ export const AuditScopeConfig: React.FC<AuditScopeConfigProps> = ({ onScopeConfi
                 <div className="radio-content">
                   <strong>WCAG 2.1</strong>
                   <span className="radio-description">
-                    W3C Recommendation (June 2018) - Includes mobile, low vision, and cognitive improvements
+                    W3C Recommendation (June 2018) - Includes mobile, low vision, and cognitive
+                    improvements
                   </span>
                 </div>
               </label>
@@ -167,7 +168,8 @@ export const AuditScopeConfig: React.FC<AuditScopeConfigProps> = ({ onScopeConfi
                 <div className="radio-content">
                   <strong>WCAG 2.2</strong>
                   <span className="radio-description">
-                    W3C Recommendation (October 2023) - Latest version with additional success criteria
+                    W3C Recommendation (October 2023) - Latest version with additional success
+                    criteria
                   </span>
                 </div>
               </label>
@@ -186,7 +188,8 @@ export const AuditScopeConfig: React.FC<AuditScopeConfigProps> = ({ onScopeConfi
                 onCheckedChange={() => toggleLevel('A')}
               />
               <div className="level-description">
-                Essential accessibility features. If not met, assistive technology users will find it very difficult to access content.
+                Essential accessibility features. If not met, assistive technology users will find
+                it very difficult to access content.
               </div>
 
               <Checkbox
@@ -195,7 +198,8 @@ export const AuditScopeConfig: React.FC<AuditScopeConfigProps> = ({ onScopeConfi
                 onCheckedChange={() => toggleLevel('AA')}
               />
               <div className="level-description">
-                Deals with the biggest and most common barriers. This is the level most organizations aim for (recommended).
+                Deals with the biggest and most common barriers. This is the level most
+                organizations aim for (recommended).
               </div>
 
               <Checkbox
@@ -204,7 +208,8 @@ export const AuditScopeConfig: React.FC<AuditScopeConfigProps> = ({ onScopeConfi
                 onCheckedChange={() => toggleLevel('AAA')}
               />
               <div className="level-description">
-                The highest level of accessibility. Not all content can meet this level, but apply where possible.
+                The highest level of accessibility. Not all content can meet this level, but apply
+                where possible.
               </div>
             </div>
           </section>
@@ -212,7 +217,8 @@ export const AuditScopeConfig: React.FC<AuditScopeConfigProps> = ({ onScopeConfi
           <section className="scope-section">
             <h2>Additional Standards</h2>
             <p className="section-description">
-              Include other accessibility standards (results will be derived from WCAG testing where applicable)
+              Include other accessibility standards (results will be derived from WCAG testing where
+              applicable)
             </p>
             <div className="checkbox-group">
               <Checkbox
@@ -221,7 +227,8 @@ export const AuditScopeConfig: React.FC<AuditScopeConfigProps> = ({ onScopeConfi
                 onCheckedChange={setIncludeEN301549}
               />
               <div className="level-description">
-                European accessibility requirements for ICT products and services. Harmonized with WCAG 2.1 Level AA.
+                European accessibility requirements for ICT products and services. Harmonized with
+                WCAG 2.1 Level AA.
               </div>
 
               <Checkbox
@@ -230,7 +237,8 @@ export const AuditScopeConfig: React.FC<AuditScopeConfigProps> = ({ onScopeConfi
                 onCheckedChange={setIncludeSection508}
               />
               <div className="level-description">
-                U.S. federal accessibility standards. Updated 2017 standards incorporate WCAG 2.0 Level AA.
+                U.S. federal accessibility standards. Updated 2017 standards incorporate WCAG 2.0
+                Level AA.
               </div>
             </div>
           </section>
@@ -238,7 +246,8 @@ export const AuditScopeConfig: React.FC<AuditScopeConfigProps> = ({ onScopeConfi
           <section className="scope-section">
             <h2>Testing Tools</h2>
             <p className="section-description">
-              Document the tools you'll use for testing (e.g., screen readers, browser extensions, automated scanners)
+              Document the tools you'll use for testing (e.g., screen readers, browser extensions,
+              automated scanners)
             </p>
             <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
               <Input
@@ -258,8 +267,15 @@ export const AuditScopeConfig: React.FC<AuditScopeConfigProps> = ({ onScopeConfi
               </Button>
             </div>
             {testingTools.length === 0 && (
-              <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.5rem' }}>
-                <strong>Common tools:</strong> NVDA, JAWS, VoiceOver, TalkBack, axe DevTools, WAVE, Lighthouse, Colour Contrast Analyser
+              <div
+                style={{
+                  fontSize: '0.875rem',
+                  color: 'var(--color-text-muted)',
+                  marginBottom: '0.5rem',
+                }}
+              >
+                <strong>Common tools:</strong> NVDA, JAWS, VoiceOver, TalkBack, axe DevTools, WAVE,
+                Lighthouse, Colour Contrast Analyser
               </div>
             )}
             {testingTools.length > 0 && (
@@ -325,7 +341,8 @@ export const AuditScopeConfig: React.FC<AuditScopeConfigProps> = ({ onScopeConfi
           <section className="scope-section">
             <h2>Evaluation Methods Used</h2>
             <p className="section-description">
-              Describe how you conducted the evaluation (e.g., manual testing, keyboard navigation, automated scans, user testing)
+              Describe how you conducted the evaluation (e.g., manual testing, keyboard navigation,
+              automated scans, user testing)
             </p>
             <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
               <Input
@@ -345,8 +362,16 @@ export const AuditScopeConfig: React.FC<AuditScopeConfigProps> = ({ onScopeConfi
               </Button>
             </div>
             {evaluationMethods.length === 0 && (
-              <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.5rem' }}>
-                <strong>Common methods:</strong> Manual keyboard navigation testing, Screen reader testing, Automated scanning, Visual inspection, Code review, User testing with assistive technology users
+              <div
+                style={{
+                  fontSize: '0.875rem',
+                  color: 'var(--color-text-muted)',
+                  marginBottom: '0.5rem',
+                }}
+              >
+                <strong>Common methods:</strong> Manual keyboard navigation testing, Screen reader
+                testing, Automated scanning, Visual inspection, Code review, User testing with
+                assistive technology users
               </div>
             )}
             {evaluationMethods.length > 0 && (

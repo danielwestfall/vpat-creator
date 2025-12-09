@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { toast } from '../store/toast-store';
 import { Button, Input, Select } from '../components/common';
 import { wcagService } from '../services/wcag-service';
 import type { WCAGSuccessCriterion, ConformanceLevel } from '../models/types';
@@ -20,7 +21,7 @@ export const CustomCriteriaPage: React.FC = () => {
   const loadCriteria = () => {
     // Find the custom principle and get its criteria
     const principles = wcagService.getPrinciples();
-    const customPrinciple = principles.find(p => p.id === 'custom');
+    const customPrinciple = principles.find((p) => p.id === 'custom');
     if (customPrinciple && customPrinciple.guidelines.length > 0) {
       setCriteria(customPrinciple.guidelines[0].successcriteria);
     } else {
@@ -30,12 +31,12 @@ export const CustomCriteriaPage: React.FC = () => {
 
   const handleAdd = () => {
     if (!newCriterion.num || !newCriterion.title || !newCriterion.content) {
-      alert('Please fill in all fields');
+      toast.error('Please fill in all fields');
       return;
     }
 
     const id = `custom-${newCriterion.num?.replace(/\./g, '-')}`;
-    
+
     const criterion: WCAGSuccessCriterion = {
       id,
       num: newCriterion.num!,
@@ -50,9 +51,9 @@ export const CustomCriteriaPage: React.FC = () => {
       wcagService.addCustomCriterion(criterion);
       setNewCriterion({ num: '', title: '', level: 'A', content: '' });
       loadCriteria();
-      alert('Custom criterion added successfully!');
+      toast.success('Custom criterion added successfully!');
     } catch {
-      alert('Failed to add criterion. ID might already exist.');
+      toast.error('Failed to add criterion. ID might already exist.');
     }
   };
 
@@ -78,13 +79,17 @@ export const CustomCriteriaPage: React.FC = () => {
               <Input
                 label="Number"
                 value={newCriterion.num}
-                onChange={(e) => setNewCriterion({ ...newCriterion, num: e.target.value })}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setNewCriterion({ ...newCriterion, num: e.target.value })
+                }
                 placeholder="e.g., 5.1.1"
               />
               <Select
                 label="Level"
                 value={newCriterion.level}
-                onValueChange={(val) => setNewCriterion({ ...newCriterion, level: val as ConformanceLevel })}
+                onValueChange={(val) =>
+                  setNewCriterion({ ...newCriterion, level: val as ConformanceLevel })
+                }
                 options={[
                   { value: 'A', label: 'Level A' },
                   { value: 'AA', label: 'Level AA' },
@@ -95,7 +100,9 @@ export const CustomCriteriaPage: React.FC = () => {
             <Input
               label="Title"
               value={newCriterion.title}
-              onChange={(e) => setNewCriterion({ ...newCriterion, title: e.target.value })}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setNewCriterion({ ...newCriterion, title: e.target.value })
+              }
               placeholder="e.g., Brand Color Contrast"
             />
             <div className="input-wrapper">
@@ -104,7 +111,9 @@ export const CustomCriteriaPage: React.FC = () => {
                 id="criteria-content"
                 className="criteria-textarea"
                 value={newCriterion.content}
-                onChange={(e) => setNewCriterion({ ...newCriterion, content: e.target.value })}
+                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                  setNewCriterion({ ...newCriterion, content: e.target.value })
+                }
                 rows={4}
               />
             </div>
@@ -125,7 +134,7 @@ export const CustomCriteriaPage: React.FC = () => {
                   <div className="criterion-header">
                     <span className="criterion-num">{c.num}</span>
                     <span className={`level-badge level-${c.level}`}>{c.level}</span>
-                    <button 
+                    <button
                       className="delete-btn"
                       onClick={() => handleRemove(c.id)}
                       aria-label="Delete"

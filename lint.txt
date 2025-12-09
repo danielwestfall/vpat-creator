@@ -1,0 +1,32 @@
+﻿
+> vpat-creator@0.0.0 lint
+> eslint .
+
+
+C:\Users\clean\Desktop\VPAT_Creation\vpat-creator\src\components\common\ImageUpload.tsx
+  58:18  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\clean\Desktop\VPAT_Creation\vpat-creator\src\components\export\EmailDialog.tsx
+  108:13  error  A form label must be associated with a control  jsx-a11y/label-has-associated-control
+  122:13  error  A form label must be associated with a control  jsx-a11y/label-has-associated-control
+
+C:\Users\clean\Desktop\VPAT_Creation\vpat-creator\src\components\settings\ShortcutSettings.tsx
+  14:14  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\clean\Desktop\VPAT_Creation\vpat-creator\src\components\settings\TeamManagement.tsx
+  194:54  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\clean\Desktop\VPAT_Creation\vpat-creator\src\components\templates\TemplateEditor.tsx
+  282:72  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  313:72  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\clean\Desktop\VPAT_Creation\vpat-creator\src\pages\RoadmapPage.tsx
+  30:33  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  70:87  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\clean\Desktop\VPAT_Creation\vpat-creator\src\pages\StyleGuidePage.tsx
+  70:87  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  85:85  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+Γ£û 11 problems (3 errors, 8 warnings)
+

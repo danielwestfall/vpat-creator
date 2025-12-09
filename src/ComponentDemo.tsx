@@ -64,7 +64,12 @@ export const ComponentDemo: React.FC = () => {
                 <Button
                   icon={
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                      <path d="M8 4V12M4 8H12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                      <path
+                        d="M8 4V12M4 8H12"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                      />
                     </svg>
                   }
                   iconPosition="left"
@@ -75,7 +80,12 @@ export const ComponentDemo: React.FC = () => {
                   variant="secondary"
                   icon={
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                      <path d="M12 4L4 12M4 4L12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                      <path
+                        d="M12 4L4 12M4 4L12 12"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                      />
                     </svg>
                   }
                   iconPosition="right"
@@ -131,7 +141,12 @@ export const ComponentDemo: React.FC = () => {
                 startIcon={
                   <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
                     <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="2" fill="none" />
-                    <path d="M12 12L16 16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                    <path
+                      d="M12 12L16 16"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    />
                   </svg>
                 }
               />
@@ -256,11 +271,7 @@ export const ComponentDemo: React.FC = () => {
               >
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                   <Input label="Project Name" placeholder="My Accessibility Project" required />
-                  <Input
-                    label="Product Name"
-                    placeholder="Product being tested"
-                    required
-                  />
+                  <Input label="Product Name" placeholder="Product being tested" required />
                   <Select
                     label="Conformance Level"
                     options={[
@@ -284,10 +295,7 @@ export const ComponentDemo: React.FC = () => {
       </main>
 
       <footer className="demo-footer">
-        <p>
-          Built with React, TypeScript, Radix UI • WCAG 2.2 AAA Compliant • Keyboard
-          Navigable
-        </p>
+        <p>Built with React, TypeScript, Radix UI • WCAG 2.2 AAA Compliant • Keyboard Navigable</p>
       </footer>
     </div>
   );

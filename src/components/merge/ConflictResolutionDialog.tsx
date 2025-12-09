@@ -24,7 +24,7 @@ export function ConflictResolutionDialog({
 
   const handleResolveAll = (choice: 'local' | 'incoming') => {
     const newResolutions = new Map<string, 'local' | 'incoming'>();
-    mergeResult.conflicts.forEach(conflict => {
+    mergeResult.conflicts.forEach((conflict) => {
       newResolutions.set(conflict.criterionId, choice);
     });
     setResolutions(newResolutions);
@@ -38,8 +38,8 @@ export function ConflictResolutionDialog({
 
   return (
     <div className="conflict-resolution-dialog">
-      <div 
-        className="conflict-resolution-dialog__overlay" 
+      <div
+        className="conflict-resolution-dialog__overlay"
         onClick={onCancel}
         role="button"
         tabIndex={0}
@@ -51,9 +51,9 @@ export function ConflictResolutionDialog({
         aria-label="Close dialog"
       />
 
-      <div 
-        className="conflict-resolution-dialog__content" 
-        role="dialog" 
+      <div
+        className="conflict-resolution-dialog__content"
+        role="dialog"
         aria-modal="true"
         aria-labelledby="conflict-dialog-title"
       >
@@ -61,8 +61,8 @@ export function ConflictResolutionDialog({
           <h2 id="conflict-dialog-title" className="conflict-resolution-dialog__title">
             🔀 Resolve Merge Conflicts
           </h2>
-          <button 
-            className="conflict-resolution-dialog__close" 
+          <button
+            className="conflict-resolution-dialog__close"
             onClick={onCancel}
             aria-label="Close dialog"
           >
@@ -86,9 +86,11 @@ export function ConflictResolutionDialog({
               </span>
             </div>
             <p className="merge-summary__text">
-              {mergeResult.summary.autoMerged} tests were automatically merged (using newer version).
-              {mergeResult.summary.new > 0 && ` ${mergeResult.summary.new} new tests will be added.`}
-              {' '}Please resolve the conflicts below to complete the merge.
+              {mergeResult.summary.autoMerged} tests were automatically merged (using newer
+              version).
+              {mergeResult.summary.new > 0 &&
+                ` ${mergeResult.summary.new} new tests will be added.`}{' '}
+              Please resolve the conflicts below to complete the merge.
             </p>
           </div>
 
@@ -96,18 +98,10 @@ export function ConflictResolutionDialog({
           {mergeResult.conflicts.length > 1 && (
             <div className="bulk-actions">
               <span className="bulk-actions__label">Quick resolve all:</span>
-              <Button 
-                size="sm" 
-                variant="secondary"
-                onClick={() => handleResolveAll('local')}
-              >
+              <Button size="sm" variant="secondary" onClick={() => handleResolveAll('local')}>
                 Keep All Mine
               </Button>
-              <Button 
-                size="sm" 
-                variant="secondary"
-                onClick={() => handleResolveAll('incoming')}
-              >
+              <Button size="sm" variant="secondary" onClick={() => handleResolveAll('incoming')}>
                 Use All Theirs
               </Button>
             </div>
@@ -128,18 +122,18 @@ export function ConflictResolutionDialog({
                         ✓ Resolved
                       </span>
                     ) : (
-                      <span className="resolution-badge resolution-badge--pending">
-                        ⚠ Pending
-                      </span>
+                      <span className="resolution-badge resolution-badge--pending">⚠ Pending</span>
                     )}
                   </div>
                 </div>
 
                 <div className="conflict-comparison">
                   {/* Local version */}
-                  <div 
+                  <div
                     className={`conflict-option ${
-                      resolutions.get(conflict.criterionId) === 'local' ? 'conflict-option--selected' : ''
+                      resolutions.get(conflict.criterionId) === 'local'
+                        ? 'conflict-option--selected'
+                        : ''
                     }`}
                   >
                     <div className="conflict-option__header">
@@ -150,17 +144,25 @@ export function ConflictResolutionDialog({
                         checked={resolutions.get(conflict.criterionId) === 'local'}
                         onChange={() => handleResolutionChange(conflict.criterionId, 'local')}
                       />
-                      <label htmlFor={`${conflict.criterionId}-local`} className="conflict-option__label">
+                      <label
+                        htmlFor={`${conflict.criterionId}-local`}
+                        className="conflict-option__label"
+                      >
                         <strong>Your Version</strong>
                         <span className="conflict-option__meta">
-                          by {conflict.local.testedBy || 'Unknown'} • {conflict.local.testedDate ? formatDate(conflict.local.testedDate) : 'No date'}
+                          by {conflict.local.testedBy || 'Unknown'} •{' '}
+                          {conflict.local.testedDate
+                            ? formatDate(conflict.local.testedDate)
+                            : 'No date'}
                         </span>
                       </label>
                     </div>
                     <div className="conflict-option__content">
                       <div className="conflict-field">
                         <span className="field-label">Status:</span>
-                        <span className={`status-badge status-badge--${conflict.local.conformance.toLowerCase().replace(/ /g, '-')}`}>
+                        <span
+                          className={`status-badge status-badge--${conflict.local.conformance.toLowerCase().replace(/ /g, '-')}`}
+                        >
                           {conflict.local.conformance}
                         </span>
                       </div>
@@ -174,9 +176,11 @@ export function ConflictResolutionDialog({
                   </div>
 
                   {/* Incoming version */}
-                  <div 
+                  <div
                     className={`conflict-option ${
-                      resolutions.get(conflict.criterionId) === 'incoming' ? 'conflict-option--selected' : ''
+                      resolutions.get(conflict.criterionId) === 'incoming'
+                        ? 'conflict-option--selected'
+                        : ''
                     }`}
                   >
                     <div className="conflict-option__header">
@@ -187,17 +191,25 @@ export function ConflictResolutionDialog({
                         checked={resolutions.get(conflict.criterionId) === 'incoming'}
                         onChange={() => handleResolutionChange(conflict.criterionId, 'incoming')}
                       />
-                      <label htmlFor={`${conflict.criterionId}-incoming`} className="conflict-option__label">
+                      <label
+                        htmlFor={`${conflict.criterionId}-incoming`}
+                        className="conflict-option__label"
+                      >
                         <strong>Their Version</strong>
                         <span className="conflict-option__meta">
-                          by {conflict.incoming.testedBy || 'Unknown'} • {conflict.incoming.testedDate ? formatDate(conflict.incoming.testedDate) : 'No date'}
+                          by {conflict.incoming.testedBy || 'Unknown'} •{' '}
+                          {conflict.incoming.testedDate
+                            ? formatDate(conflict.incoming.testedDate)
+                            : 'No date'}
                         </span>
                       </label>
                     </div>
                     <div className="conflict-option__content">
                       <div className="conflict-field">
                         <span className="field-label">Status:</span>
-                        <span className={`status-badge status-badge--${conflict.incoming.conformance.toLowerCase().replace(/ /g, '-')}`}>
+                        <span
+                          className={`status-badge status-badge--${conflict.incoming.conformance.toLowerCase().replace(/ /g, '-')}`}
+                        >
                           {conflict.incoming.conformance}
                         </span>
                       </div>
@@ -233,11 +245,7 @@ export function ConflictResolutionDialog({
           <Button variant="secondary" onClick={onCancel}>
             Cancel Merge
           </Button>
-          <Button 
-            variant="primary" 
-            onClick={() => onResolve(resolutions)}
-            disabled={!canProceed}
-          >
+          <Button variant="primary" onClick={() => onResolve(resolutions)} disabled={!canProceed}>
             Apply Merge ({resolutions.size}/{mergeResult.conflicts.length})
           </Button>
         </div>

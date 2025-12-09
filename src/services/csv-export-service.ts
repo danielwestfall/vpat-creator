@@ -11,29 +11,22 @@ export class CSVExportService {
       'Notes',
       'Tested By',
       'Date',
-      'Tools Used'
+      'Tools Used',
     ];
 
     // Iterate through the schedule to ensure order and include untested items
-    const allRows = schedule.map(sc => {
-      const result = results.find(r => r.successCriterionId === sc.id);
-      
+    const allRows = schedule.map((sc) => {
+      const result = results.find((r) => r.successCriterionId === sc.id);
+
       const status = result ? result.conformance : 'Not Tested';
-      const notes = result ? (result.observations || result.customNotes || '') : '';
+      const notes = result ? result.observations || result.customNotes || '' : '';
       const testedBy = result?.testedBy || '';
       const date = result?.testedDate ? new Date(result.testedDate).toLocaleDateString() : '';
       const tools = result?.testingMethod.tools?.join(', ') || '';
 
-      return [
-        sc.scNumber,
-        sc.scTitle,
-        sc.scLevel,
-        status,
-        notes,
-        testedBy,
-        date,
-        tools
-      ].map(this.escapeCSV).join(',');
+      return [sc.scNumber, sc.scTitle, sc.scLevel, status, notes, testedBy, date, tools]
+        .map(this.escapeCSV)
+        .join(',');
     });
 
     return [headers.join(','), ...allRows].join('\n');
@@ -59,7 +52,12 @@ export class CSVExportService {
     if (field === undefined || field === null) return '';
     const stringField = String(field);
     // If field contains comma, quote, or newline, wrap in quotes and escape existing quotes
-    if (stringField.includes(',') || stringField.includes('"') || stringField.includes('\n') || stringField.includes('\r')) {
+    if (
+      stringField.includes(',') ||
+      stringField.includes('"') ||
+      stringField.includes('\n') ||
+      stringField.includes('\r')
+    ) {
       return `"${stringField.replace(/"/g, '""')}"`;
     }
     return stringField;

@@ -35,7 +35,7 @@ export const RoadmapPage: React.FC = () => {
   };
 
   const handleDeleteItem = (id: string) => {
-    setItems(items.filter(item => item.id !== id));
+    setItems(items.filter((item) => item.id !== id));
   };
 
   return (
@@ -76,7 +76,9 @@ export const RoadmapPage: React.FC = () => {
                 </select>
               </div>
             </div>
-            <label htmlFor="description-input" className="sr-only">Description</label>
+            <label htmlFor="description-input" className="sr-only">
+              Description
+            </label>
             <textarea
               id="description-input"
               className="description-input"
@@ -85,7 +87,11 @@ export const RoadmapPage: React.FC = () => {
               onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
               rows={3}
             />
-            <Button onClick={handleAddItem} variant="primary" disabled={!newItem.title || !newItem.targetDate}>
+            <Button
+              onClick={handleAddItem}
+              variant="primary"
+              disabled={!newItem.title || !newItem.targetDate}
+            >
               Add Item
             </Button>
           </div>
@@ -97,26 +103,29 @@ export const RoadmapPage: React.FC = () => {
             <div className="empty-state">No roadmap items added yet.</div>
           ) : (
             <div className="timeline">
-              {items.sort((a, b) => new Date(a.targetDate).getTime() - new Date(b.targetDate).getTime())
+              {items
+                .sort((a, b) => new Date(a.targetDate).getTime() - new Date(b.targetDate).getTime())
                 .map((item) => (
-                <div key={item.id} className="timeline-item">
-                  <div className="timeline-date">{new Date(item.targetDate).toLocaleDateString()}</div>
-                  <div className="timeline-content">
-                    <div className="item-header">
-                      <h3>{item.title}</h3>
-                      <span className={`status-badge status-${item.status}`}>{item.status}</span>
+                  <div key={item.id} className="timeline-item">
+                    <div className="timeline-date">
+                      {new Date(item.targetDate).toLocaleDateString()}
                     </div>
-                    <p>{item.description}</p>
-                    <button 
-                      className="delete-btn"
-                      onClick={() => handleDeleteItem(item.id)}
-                      aria-label="Delete item"
-                    >
-                      🗑️
-                    </button>
+                    <div className="timeline-content">
+                      <div className="item-header">
+                        <h3>{item.title}</h3>
+                        <span className={`status-badge status-${item.status}`}>{item.status}</span>
+                      </div>
+                      <p>{item.description}</p>
+                      <button
+                        className="delete-btn"
+                        onClick={() => handleDeleteItem(item.id)}
+                        aria-label="Delete item"
+                      >
+                        🗑️
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
             </div>
           )}
         </div>

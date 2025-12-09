@@ -1,6 +1,6 @@
 /**
  * Standards Mapping Service
- * 
+ *
  * Maps WCAG 2.x results to other accessibility standards:
  * - EN 301 549 (European Standard)
  * - Section 508 (U.S. Federal Standard)
@@ -35,7 +35,8 @@ export const EN_301_549_MAPPINGS: StandardMapping[] = [
     standardId: 'EN301549',
     sectionNumber: '9.1.2.1',
     sectionTitle: 'Audio-only and Video-only (Prerecorded)',
-    description: 'Web pages shall satisfy WCAG 2.1 Success Criterion 1.2.1 Audio-only and Video-only (Prerecorded).',
+    description:
+      'Web pages shall satisfy WCAG 2.1 Success Criterion 1.2.1 Audio-only and Video-only (Prerecorded).',
     mappedFromWCAG: ['1.2.1'],
     isDirectMapping: true,
   },
@@ -51,7 +52,8 @@ export const EN_301_549_MAPPINGS: StandardMapping[] = [
     standardId: 'EN301549',
     sectionNumber: '9.1.2.3',
     sectionTitle: 'Audio Description or Media Alternative (Prerecorded)',
-    description: 'Web pages shall satisfy WCAG 2.1 Success Criterion 1.2.3 Audio Description or Media Alternative (Prerecorded).',
+    description:
+      'Web pages shall satisfy WCAG 2.1 Success Criterion 1.2.3 Audio Description or Media Alternative (Prerecorded).',
     mappedFromWCAG: ['1.2.3'],
     isDirectMapping: true,
   },
@@ -69,7 +71,8 @@ export const SECTION_508_MAPPINGS: StandardMapping[] = [
     standardId: 'Section508',
     sectionNumber: '501',
     sectionTitle: 'General',
-    description: 'Scope: ICT conforming to Level A and Level AA of WCAG 2.0 shall be deemed to comply with 502 and 503.',
+    description:
+      'Scope: ICT conforming to Level A and Level AA of WCAG 2.0 shall be deemed to comply with 502 and 503.',
     mappedFromWCAG: ['ALL_A', 'ALL_AA'],
     isDirectMapping: true,
   },
@@ -77,7 +80,8 @@ export const SECTION_508_MAPPINGS: StandardMapping[] = [
     standardId: 'Section508',
     sectionNumber: '502.3.1',
     sectionTitle: 'Object Information',
-    description: 'Programmatically determinable object role, state, properties, boundary, name, and description.',
+    description:
+      'Programmatically determinable object role, state, properties, boundary, name, and description.',
     mappedFromWCAG: ['1.3.1', '4.1.2'],
     isDirectMapping: true,
     additionalNotes: 'Maps to WCAG but requires platform-specific API testing',
@@ -86,7 +90,8 @@ export const SECTION_508_MAPPINGS: StandardMapping[] = [
     standardId: 'Section508',
     sectionNumber: '502.3.2',
     sectionTitle: 'Modification of Object Information',
-    description: 'States and properties that can be set by the user shall be capable of being set programmatically.',
+    description:
+      'States and properties that can be set by the user shall be capable of being set programmatically.',
     mappedFromWCAG: ['4.1.2'],
     isDirectMapping: false,
     additionalNotes: 'Requires additional testing of programmatic control',
@@ -95,10 +100,12 @@ export const SECTION_508_MAPPINGS: StandardMapping[] = [
     standardId: 'Section508',
     sectionNumber: '503.4',
     sectionTitle: 'User Controls for Captions and Audio Description',
-    description: 'Where ICT displays video with synchronized audio, it shall provide user controls for closed captions and audio descriptions.',
+    description:
+      'Where ICT displays video with synchronized audio, it shall provide user controls for closed captions and audio descriptions.',
     mappedFromWCAG: ['1.2.2', '1.2.5'],
     isDirectMapping: false,
-    additionalNotes: 'Requires checking for presence of user controls, not just caption/description availability',
+    additionalNotes:
+      'Requires checking for presence of user controls, not just caption/description availability',
   },
 ];
 
@@ -109,7 +116,7 @@ export function generateEN301549Mapping(wcagVersion: '2.1' | '2.2'): StandardMap
   if (wcagVersion === '2.1') {
     return EN_301_549_MAPPINGS;
   }
-  
+
   // For WCAG 2.2, note that EN 301 549 V3.2.1 references WCAG 2.1
   // New 2.2 criteria may not have direct EN mappings yet
   return [
@@ -118,8 +125,19 @@ export function generateEN301549Mapping(wcagVersion: '2.1' | '2.2'): StandardMap
       standardId: 'EN301549',
       sectionNumber: 'NOTE',
       sectionTitle: 'WCAG 2.2 Additional Criteria',
-      description: 'EN 301 549 V3.2.1 references WCAG 2.1. WCAG 2.2 criteria may require evaluation under V4.0 when published.',
-      mappedFromWCAG: ['2.4.11', '2.4.12', '2.4.13', '2.5.7', '2.5.8', '3.2.6', '3.3.7', '3.3.8', '3.3.9'],
+      description:
+        'EN 301 549 V3.2.1 references WCAG 2.1. WCAG 2.2 criteria may require evaluation under V4.0 when published.',
+      mappedFromWCAG: [
+        '2.4.11',
+        '2.4.12',
+        '2.4.13',
+        '2.5.7',
+        '2.5.8',
+        '3.2.6',
+        '3.3.7',
+        '3.3.8',
+        '3.3.9',
+      ],
       isDirectMapping: false,
       additionalNotes: 'New WCAG 2.2 criteria - check latest EN 301 549 version for formal mapping',
     },
@@ -133,22 +151,25 @@ export function mapWCAGToEN301549(
   wcagResults: Map<string, { status: ConformanceStatus | 'Not Tested'; scNumber: string }>,
   wcagVersion: '2.1' | '2.2'
 ): Map<string, { status: ConformanceStatus | 'Not Tested'; mappedFrom: string[] }> {
-  const enResults = new Map<string, { status: ConformanceStatus | 'Not Tested'; mappedFrom: string[] }>();
-  
+  const enResults = new Map<
+    string,
+    { status: ConformanceStatus | 'Not Tested'; mappedFrom: string[] }
+  >();
+
   const mappings = generateEN301549Mapping(wcagVersion);
-  
+
   for (const mapping of mappings) {
     if (mapping.isDirectMapping && mapping.mappedFromWCAG.length > 0) {
       // For direct mappings, use the worst status from all mapped WCAG criteria
       let worstStatus: ConformanceStatus | 'Not Tested' = 'Supports';
       const mappedFrom: string[] = [];
-      
+
       for (const wcagSC of mapping.mappedFromWCAG) {
         const result = Array.from(wcagResults.entries()).find(([_, r]) => r.scNumber === wcagSC);
         if (result) {
           mappedFrom.push(wcagSC);
           const status = result[1].status;
-          
+
           // Priority: Does Not Support > Partially Supports > Not Tested > Supports
           if (status === 'Does Not Support') {
             worstStatus = 'Does Not Support';
@@ -159,11 +180,11 @@ export function mapWCAGToEN301549(
           }
         }
       }
-      
+
       enResults.set(mapping.sectionNumber, { status: worstStatus, mappedFrom });
     }
   }
-  
+
   return enResults;
 }
 
@@ -172,21 +193,35 @@ export function mapWCAGToEN301549(
  */
 export function mapWCAGToSection508(
   wcagResults: Map<string, { status: ConformanceStatus | 'Not Tested'; scNumber: string }>
-): Map<string, { status: ConformanceStatus | 'Not Tested'; mappedFrom: string[]; requiresAdditionalTesting: boolean }> {
-  const section508Results = new Map<string, { status: ConformanceStatus | 'Not Tested'; mappedFrom: string[]; requiresAdditionalTesting: boolean }>();
-  
+): Map<
+  string,
+  {
+    status: ConformanceStatus | 'Not Tested';
+    mappedFrom: string[];
+    requiresAdditionalTesting: boolean;
+  }
+> {
+  const section508Results = new Map<
+    string,
+    {
+      status: ConformanceStatus | 'Not Tested';
+      mappedFrom: string[];
+      requiresAdditionalTesting: boolean;
+    }
+  >();
+
   for (const mapping of SECTION_508_MAPPINGS) {
     let worstStatus: ConformanceStatus | 'Not Tested' = 'Supports';
     const mappedFrom: string[] = [];
-    
+
     for (const wcagSC of mapping.mappedFromWCAG) {
       if (wcagSC === 'ALL_A' || wcagSC === 'ALL_AA') continue; // Skip general mappings
-      
+
       const result = Array.from(wcagResults.entries()).find(([_, r]) => r.scNumber === wcagSC);
       if (result) {
         mappedFrom.push(wcagSC);
         const status = result[1].status;
-        
+
         if (status === 'Does Not Support') {
           worstStatus = 'Does Not Support';
         } else if (status === 'Partially Supports' && worstStatus !== 'Does Not Support') {
@@ -196,14 +231,14 @@ export function mapWCAGToSection508(
         }
       }
     }
-    
+
     section508Results.set(mapping.sectionNumber, {
       status: worstStatus,
       mappedFrom,
       requiresAdditionalTesting: !mapping.isDirectMapping,
     });
   }
-  
+
   return section508Results;
 }
 

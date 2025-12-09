@@ -1,6 +1,6 @@
 /**
  * Testing Schedule Generator
- * 
+ *
  * Generates two types of testing schedules from WCAG 2.2 data:
  * 1. Success Criteria-based schedule (organized by SC)
  * 2. Technique/Component-based schedule (organized by HTML elements and techniques)
@@ -142,7 +142,12 @@ export function generateSCBasedSchedule(
               item.groups.forEach((group) => {
                 group.techniques.forEach((tech) => {
                   // Avoid duplicates and skip invalid techniques
-                  if (tech.id && tech.technology && tech.title && !sufficientTechniques.some((t) => t.id === tech.id)) {
+                  if (
+                    tech.id &&
+                    tech.technology &&
+                    tech.title &&
+                    !sufficientTechniques.some((t) => t.id === tech.id)
+                  ) {
                     sufficientTechniques.push({
                       id: tech.id,
                       technology: tech.technology,
@@ -344,9 +349,7 @@ export function generateComponentBasedSchedule(
     cat.totalTime += item.estimatedTime;
   });
 
-  return Array.from(categories.values()).sort((a, b) =>
-    a.category.localeCompare(b.category)
-  );
+  return Array.from(categories.values()).sort((a, b) => a.category.localeCompare(b.category));
 }
 
 // Helper functions
@@ -398,7 +401,7 @@ function identifyComponentsFromTechniques(techniques: TechniqueReference[]): str
 
   techniques.forEach((tech) => {
     if (!tech.id) return; // Skip if no ID
-    
+
     const techId = tech.id.toUpperCase();
 
     if (techId.startsWith('H') || techId.startsWith('HTML')) {
@@ -406,7 +409,11 @@ function identifyComponentsFromTechniques(techniques: TechniqueReference[]): str
       if (tech.title.includes('img') || tech.title.includes('image')) {
         components.add('Images');
       }
-      if (tech.title.includes('form') || tech.title.includes('input') || tech.title.includes('label')) {
+      if (
+        tech.title.includes('form') ||
+        tech.title.includes('input') ||
+        tech.title.includes('label')
+      ) {
         components.add('Forms');
       }
       if (tech.title.includes('link') || tech.title.includes('anchor')) {
@@ -434,11 +441,10 @@ function identifyComponentsFromTechniques(techniques: TechniqueReference[]): str
   return Array.from(components);
 }
 
-function mapTechniqueToComponent(tech: {
-  id: string;
-  technology: string;
-  title: string;
-}): { component: string; htmlElement?: string } {
+function mapTechniqueToComponent(tech: { id: string; technology: string; title: string }): {
+  component: string;
+  htmlElement?: string;
+} {
   const title = tech.title?.toLowerCase() || '';
   const id = tech.id?.toUpperCase() || '';
 
@@ -576,10 +582,12 @@ function getComponentCategory(component: string): { name: string; description: s
     },
   };
 
-  return categories[component] || {
-    name: 'Other',
-    description: 'Other testing requirements',
-  };
+  return (
+    categories[component] || {
+      name: 'Other',
+      description: 'Other testing requirements',
+    }
+  );
 }
 
 function generateTechniqueTestingInstructions(

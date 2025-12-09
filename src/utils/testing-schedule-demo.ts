@@ -84,9 +84,8 @@ export function generateAndDisplaySchedules() {
 
 // Make available in browser console for testing
 if (typeof window !== 'undefined') {
-  (window as unknown as { generateSchedules: typeof generateAndDisplaySchedules }).generateSchedules =
-    generateAndDisplaySchedules;
-  logger.info(
-    '💡 Run window.generateSchedules() to generate testing schedules in console'
-  );
+  (
+    window as unknown as { generateSchedules: typeof generateAndDisplaySchedules }
+  ).generateSchedules = generateAndDisplaySchedules;
+  logger.info('💡 Run window.generateSchedules() to generate testing schedules in console');
 }

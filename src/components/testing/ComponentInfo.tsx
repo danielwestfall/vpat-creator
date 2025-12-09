@@ -1,6 +1,6 @@
 /**
  * Component Info Display
- * 
+ *
  * Shows detailed information about testing specific component types
  * with common WCAG criteria and testing guidance
  */
@@ -23,10 +23,11 @@ interface ComponentTypeInfo {
 }
 
 const componentTypeInfo: Record<string, ComponentTypeInfo> = {
-  'forms': {
+  forms: {
     name: 'Forms & Inputs',
     icon: '📝',
-    description: 'Form controls including inputs, selects, checkboxes, radio buttons, and textareas',
+    description:
+      'Form controls including inputs, selects, checkboxes, radio buttons, and textareas',
     commonSC: [
       {
         number: '1.3.1',
@@ -44,7 +45,7 @@ const componentTypeInfo: Record<string, ComponentTypeInfo> = {
         number: '3.2.2',
         title: 'On Input',
         level: 'A',
-        why: 'Forms shouldn\'t change context unexpectedly',
+        why: "Forms shouldn't change context unexpectedly",
       },
       {
         number: '3.3.1',
@@ -80,7 +81,7 @@ const componentTypeInfo: Record<string, ComponentTypeInfo> = {
       'Submit button causes unexpected context change',
     ],
   },
-  'images': {
+  images: {
     name: 'Images & Graphics',
     icon: '🖼️',
     description: 'Images, icons, graphics, charts, and other non-text content',
@@ -119,7 +120,7 @@ const componentTypeInfo: Record<string, ComponentTypeInfo> = {
       'Icons without accessible names',
     ],
   },
-  'navigation': {
+  navigation: {
     name: 'Navigation & Menus',
     icon: '🧭',
     description: 'Navigation menus, breadcrumbs, site navigation, and wayfinding elements',
@@ -170,7 +171,7 @@ const componentTypeInfo: Record<string, ComponentTypeInfo> = {
       'Missing navigation landmarks',
     ],
   },
-  'links': {
+  links: {
     name: 'Links & Hyperlinks',
     icon: '🔗',
     description: 'Hyperlinks, anchor tags, and clickable text elements',
@@ -191,7 +192,7 @@ const componentTypeInfo: Record<string, ComponentTypeInfo> = {
         number: '1.4.1',
         title: 'Use of Color',
         level: 'A',
-        why: 'Links can\'t be distinguished by color alone',
+        why: "Links can't be distinguished by color alone",
       },
     ],
     testingTips: [
@@ -209,7 +210,7 @@ const componentTypeInfo: Record<string, ComponentTypeInfo> = {
       'Missing link underlines or other indicators',
     ],
   },
-  'buttons': {
+  buttons: {
     name: 'Buttons & Controls',
     icon: '🔘',
     description: 'Buttons, toggle switches, and interactive controls',
@@ -248,7 +249,7 @@ const componentTypeInfo: Record<string, ComponentTypeInfo> = {
       'Unclear button labels',
     ],
   },
-  'headings': {
+  headings: {
     name: 'Headings & Structure',
     icon: '📑',
     description: 'Heading elements, page structure, and document hierarchy',
@@ -274,7 +275,7 @@ const componentTypeInfo: Record<string, ComponentTypeInfo> = {
     ],
     testingTips: [
       'Use heading outline tool to view hierarchy',
-      'Verify heading levels don\'t skip (h1→h2→h3, not h1→h3)',
+      "Verify heading levels don't skip (h1→h2→h3, not h1→h3)",
       'Check that each page has one h1',
       'Test screen reader heading navigation',
       'Verify headings accurately describe content',
@@ -287,7 +288,7 @@ const componentTypeInfo: Record<string, ComponentTypeInfo> = {
       'Generic heading text like "More Information"',
     ],
   },
-  'tables': {
+  tables: {
     name: 'Data Tables',
     icon: '📊',
     description: 'Data tables with rows, columns, headers, and relationships',
@@ -320,7 +321,7 @@ const componentTypeInfo: Record<string, ComponentTypeInfo> = {
       'Merged cells not properly marked',
     ],
   },
-  'media': {
+  media: {
     name: 'Audio & Video',
     icon: '🎬',
     description: 'Video players, audio players, captions, transcripts, and audio descriptions',
@@ -380,7 +381,7 @@ const componentTypeInfo: Record<string, ComponentTypeInfo> = {
         number: '1.4.1',
         title: 'Use of Color',
         level: 'A',
-        why: 'Information can\'t be conveyed by color alone',
+        why: "Information can't be conveyed by color alone",
       },
       {
         number: '1.4.3',
@@ -406,7 +407,7 @@ const componentTypeInfo: Record<string, ComponentTypeInfo> = {
       'Check focus indicators have sufficient contrast',
       'Verify form controls and buttons have 3:1 contrast',
       'Test with grayscale - can you still distinguish elements?',
-      'Check color isn\'t sole method for conveying information',
+      "Check color isn't sole method for conveying information",
     ],
     commonIssues: [
       'Low contrast text (especially gray text)',
@@ -416,7 +417,7 @@ const componentTypeInfo: Record<string, ComponentTypeInfo> = {
       'Chart legends using only color to distinguish data',
     ],
   },
-  'keyboard': {
+  keyboard: {
     name: 'Keyboard Navigation',
     icon: '⌨️',
     description: 'Keyboard accessibility, focus management, and navigation',
@@ -451,17 +452,17 @@ const componentTypeInfo: Record<string, ComponentTypeInfo> = {
       'Tab through page - verify logical order',
       'Test all interactive elements can be activated',
       'Verify focus is always clearly visible',
-      'Check for keyboard traps (can\'t escape component)',
+      "Check for keyboard traps (can't escape component)",
     ],
     commonIssues: [
       'Interactive elements not reachable by keyboard',
       'Illogical tab order',
       'Keyboard traps in modals or custom widgets',
       'Poor or missing focus indicators',
-      'Custom controls don\'t respond to expected keys',
+      "Custom controls don't respond to expected keys",
     ],
   },
-  'aria': {
+  aria: {
     name: 'ARIA & Custom Widgets',
     icon: '🎭',
     description: 'ARIA attributes, custom components, and complex widgets',
@@ -524,7 +525,7 @@ export const ComponentInfo: React.FC<ComponentInfoProps> = ({ componentType }) =
         <span className="component-icon">{info.icon}</span>
         <h3>{info.name}</h3>
       </div>
-      
+
       <p className="component-description">{info.description}</p>
 
       <div className="info-section">
@@ -533,7 +534,9 @@ export const ComponentInfo: React.FC<ComponentInfoProps> = ({ componentType }) =
           {info.commonSC.map((sc) => (
             <div key={sc.number} className="sc-card">
               <div className="sc-card-header">
-                <strong>{sc.number} {sc.title}</strong>
+                <strong>
+                  {sc.number} {sc.title}
+                </strong>
                 <span className={`sc-level level-${sc.level.toLowerCase()}`}>{sc.level}</span>
               </div>
               <p className="sc-why">{sc.why}</p>

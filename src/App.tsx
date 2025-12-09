@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { TestingWorkflow } from './components/testing/TestingWorkflow';
+import { Button } from './components/common/Button';
 import { TemplateLibrary } from './components/templates/TemplateLibrary';
 import { TemplateEditor } from './components/templates/TemplateEditor';
 import { HelpCenter } from './components/help/HelpCenter';
@@ -10,6 +11,7 @@ import './App.css';
 type View = 'testing' | 'templates';
 
 function App() {
+  console.log('App mounted');
   const [view, setView] = useState<View>('testing');
   const [showHelp, setShowHelp] = useState(false);
   const [activeTemplate, setActiveTemplate] = useState<VPATTemplate | undefined>(undefined);
@@ -58,26 +60,32 @@ function App() {
           <h1>VPAT Creator</h1>
           <span className="app-header__version">v1.0</span>
         </div>
-        <nav className="app-header__nav">
-          <button 
-            className={`nav-button ${view === 'testing' ? 'active' : ''}`}
+        <nav className="app-header__nav gap-2">
+          <Button
+            variant={view === 'testing' ? 'primary' : 'secondary'}
+            size="sm"
             onClick={() => setView('testing')}
+            icon="📊"
           >
-            📊 Audit
-          </button>
-          <button 
-            className={`nav-button ${view === 'templates' ? 'active' : ''}`}
+            Audit
+          </Button>
+          <Button
+            variant={view === 'templates' ? 'primary' : 'secondary'}
+            size="sm"
             onClick={() => setView('templates')}
+            icon="📝"
           >
-            📝 Templates
-          </button>
-          <button 
-            className="nav-button"
+            Templates
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={() => setShowHelp(true)}
             aria-label="Open Help Center"
+            icon="❓"
           >
-            ❓ Help
-          </button>
+            Help
+          </Button>
         </nav>
       </header>
 
@@ -85,7 +93,7 @@ function App() {
         {view === 'testing' ? (
           <TestingWorkflow activeTemplate={activeTemplate} />
         ) : (
-          <TemplateLibrary 
+          <TemplateLibrary
             onEdit={handleEditTemplate}
             onCreate={handleCreateTemplate}
             onApply={handleApplyTemplate}
@@ -105,9 +113,7 @@ function App() {
         />
       )}
 
-      {showHelp && (
-        <HelpCenter onClose={() => setShowHelp(false)} />
-      )}
+      {showHelp && <HelpCenter onClose={() => setShowHelp(false)} />}
     </div>
   );
 }

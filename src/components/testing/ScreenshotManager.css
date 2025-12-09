@@ -39,7 +39,9 @@
 }
 
 .screenshot-card:hover {
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .screenshot-card__image-container {
@@ -81,7 +83,9 @@
   border-radius: 4px;
   cursor: pointer;
   opacity: 0;
-  transition: opacity 0.2s ease, background-color 0.2s ease;
+  transition:
+    opacity 0.2s ease,
+    background-color 0.2s ease;
 }
 
 .screenshot-card:hover .screenshot-card__delete,
@@ -327,11 +331,11 @@
     height: 40px;
     background-color: rgba(0, 0, 0, 0.5);
   }
-  
+
   .screenshot-preview__nav--prev {
     left: 0.5rem;
   }
-  
+
   .screenshot-preview__nav--next {
     right: 0.5rem;
   }

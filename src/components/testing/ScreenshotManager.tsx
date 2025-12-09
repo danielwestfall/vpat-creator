@@ -121,11 +121,7 @@ export function ScreenshotManager({
                   onClick={() => openPreview(index)}
                   aria-label={`View screenshot: ${screenshot.caption || screenshot.filename}`}
                 >
-                  <img
-                    src={screenshot.dataUrl}
-                    alt=""
-                    className="screenshot-card__image"
-                  />
+                  <img src={screenshot.dataUrl} alt="" className="screenshot-card__image" />
                 </button>
                 <button
                   className="screenshot-card__delete"
@@ -220,8 +216,8 @@ export function ScreenshotManager({
           tabIndex={0}
           aria-label="Close preview"
         >
-          <div 
-            className="screenshot-preview__content" 
+          <div
+            className="screenshot-preview__content"
             role="dialog"
             aria-modal="true"
             aria-label="Screenshot preview"
@@ -255,7 +251,12 @@ export function ScreenshotManager({
                 aria-label="Previous screenshot"
               >
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 19l-7-7 7-7"
+                  />
                 </svg>
               </button>
             )}
@@ -267,7 +268,12 @@ export function ScreenshotManager({
                 aria-label="Next screenshot"
               >
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
                 </svg>
               </button>
             )}

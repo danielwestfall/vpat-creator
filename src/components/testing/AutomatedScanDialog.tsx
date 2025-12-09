@@ -31,10 +31,10 @@ export const AutomatedScanDialog: React.FC<AutomatedScanDialogProps> = ({
     try {
       const result = await axeService.scanHtml(htmlInput);
       setScanResult(result);
-      
+
       const mapped = axeService.mapResultsToWCAG(result);
       setMappedResults(mapped);
-      
+
       if (result.violations.length === 0) {
         toast.success('No accessibility violations found!');
       } else {
@@ -55,13 +55,16 @@ export const AutomatedScanDialog: React.FC<AutomatedScanDialogProps> = ({
   };
 
   // Group results by SC for display
-  const groupedResults = mappedResults.reduce((acc, curr) => {
-    if (!acc[curr.scNumber]) {
-      acc[curr.scNumber] = [];
-    }
-    acc[curr.scNumber].push(curr);
-    return acc;
-  }, {} as Record<string, MappedResult[]>);
+  const groupedResults = mappedResults.reduce(
+    (acc, curr) => {
+      if (!acc[curr.scNumber]) {
+        acc[curr.scNumber] = [];
+      }
+      acc[curr.scNumber].push(curr);
+      return acc;
+    },
+    {} as Record<string, MappedResult[]>
+  );
 
   return (
     <Modal
@@ -143,11 +146,7 @@ export const AutomatedScanDialog: React.FC<AutomatedScanDialogProps> = ({
             <Button variant="secondary" onClick={() => setScanResult(null)}>
               Reset
             </Button>
-            <Button 
-              onClick={handleApply} 
-              disabled={mappedResults.length === 0}
-              variant="primary"
-            >
+            <Button onClick={handleApply} disabled={mappedResults.length === 0} variant="primary">
               Apply Results
             </Button>
           </>

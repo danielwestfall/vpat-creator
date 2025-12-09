@@ -92,9 +92,7 @@ export const ComponentTestingView: React.FC<ComponentTestingViewProps> = ({
                 <span className="technique-id">{tech.techniqueId}</span>
               </div>
               <div className="technique-body">
-                <div className="technique-instructions">
-                  {tech.testingInstructions}
-                </div>
+                <div className="technique-instructions">{tech.testingInstructions}</div>
 
                 <div className="related-sc-list">
                   <h4>Related Success Criteria</h4>

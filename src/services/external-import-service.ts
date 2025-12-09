@@ -32,13 +32,13 @@ export const externalImportService = {
     try {
       const text = await file.text();
       let json: unknown;
-      
+
       try {
         json = JSON.parse(text);
       } catch {
         return {
           success: false,
-          errors: ['Invalid JSON file format']
+          errors: ['Invalid JSON file format'],
         };
       }
 
@@ -49,14 +49,13 @@ export const externalImportService = {
 
       return {
         success: false,
-        errors: ['Unknown file format. Currently only axe-core JSON exports are supported.']
+        errors: ['Unknown file format. Currently only axe-core JSON exports are supported.'],
       };
-
     } catch (error) {
       console.error('External import failed:', error);
       return {
         success: false,
-        errors: ['Failed to read file']
+        errors: ['Failed to read file'],
       };
     }
   },
@@ -67,10 +66,12 @@ export const externalImportService = {
   isAxeResult(json: unknown): json is RawAxeResult {
     if (typeof json !== 'object' || json === null) return false;
     const candidate = json as RawAxeResult;
-    return Array.isArray(candidate.violations) && 
-           Array.isArray(candidate.passes) && 
-           Array.isArray(candidate.incomplete) &&
-           (candidate.testEngine?.name === 'axe-core' || !!candidate.toolOptions);
+    return (
+      Array.isArray(candidate.violations) &&
+      Array.isArray(candidate.passes) &&
+      Array.isArray(candidate.incomplete) &&
+      (candidate.testEngine?.name === 'axe-core' || !!candidate.toolOptions)
+    );
   },
 
   /**
@@ -82,7 +83,7 @@ export const externalImportService = {
       passes: json.passes || [],
       incomplete: json.incomplete || [],
       inapplicable: json.inapplicable || [],
-      timestamp: new Date(json.timestamp || Date.now())
+      timestamp: new Date(json.timestamp || Date.now()),
     };
 
     const mappedResults = axeService.mapResultsToWCAG(axeResult);
@@ -92,11 +93,14 @@ export const externalImportService = {
       data: mappedResults,
       source: 'axe-core',
       summary: {
-        total: (json.violations?.length || 0) + (json.passes?.length || 0) + (json.incomplete?.length || 0),
+        total:
+          (json.violations?.length || 0) +
+          (json.passes?.length || 0) +
+          (json.incomplete?.length || 0),
         violations: json.violations?.length || 0,
         passes: json.passes?.length || 0,
-        incomplete: json.incomplete?.length || 0
-      }
+        incomplete: json.incomplete?.length || 0,
+      },
     };
-  }
+  },
 };

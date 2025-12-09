@@ -34,14 +34,9 @@ export const env = {
  * Validate required environment variables
  */
 export function validateEnv(): boolean {
-  const required = [
-    'VITE_APP_NAME',
-    'VITE_DB_NAME',
-  ];
+  const required = ['VITE_APP_NAME', 'VITE_DB_NAME'];
 
-  const missing = required.filter(
-    (key) => !import.meta.env[key]
-  );
+  const missing = required.filter((key) => !import.meta.env[key]);
 
   if (missing.length > 0) {
     console.warn('Missing environment variables:', missing);

@@ -39,13 +39,9 @@ export const Modal: React.FC<ModalProps> = ({
         <Dialog.Content className={contentClasses}>
           {(title || description) && (
             <div className="modal-header">
-              {title && (
-                <Dialog.Title className="modal-title">{title}</Dialog.Title>
-              )}
+              {title && <Dialog.Title className="modal-title">{title}</Dialog.Title>}
               {description && (
-                <Dialog.Description className="modal-description">
-                  {description}
-                </Dialog.Description>
+                <Dialog.Description className="modal-description">{description}</Dialog.Description>
               )}
             </div>
           )}

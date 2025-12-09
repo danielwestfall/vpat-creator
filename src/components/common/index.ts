@@ -20,3 +20,6 @@ export { ToastContainer } from './ToastContainer';
 
 export { ImageUpload } from './ImageUpload';
 export type { ImageUploadProps } from './ImageUpload';
+
+export { Breadcrumb } from './Breadcrumb';
+export type { BreadcrumbItem } from './Breadcrumb';

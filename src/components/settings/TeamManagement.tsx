@@ -1,7 +1,13 @@
 import React from 'react';
+import { toast } from '../../store/toast-store';
 import { Button, Input, Select } from '../common';
 import type { TeamMember } from '../../models/types';
-import { addTeamMember, updateTeamMember, removeTeamMember, getTeamMembers } from '../../services/database';
+import {
+  addTeamMember,
+  updateTeamMember,
+  removeTeamMember,
+  getTeamMembers,
+} from '../../services/database';
 
 interface TeamManagementProps {
   onClose: () => void;
@@ -12,7 +18,7 @@ export const TeamManagement: React.FC<TeamManagementProps> = ({ onClose, onUpdat
   const [members, setMembers] = React.useState<TeamMember[]>([]);
   const [isAdding, setIsAdding] = React.useState(false);
   const [editingId, setEditingId] = React.useState<string | null>(null);
-  
+
   // Form state
   const [name, setName] = React.useState('');
   const [role, setRole] = React.useState<'Tester' | 'Reviewer' | 'Lead'>('Tester');
@@ -78,7 +84,7 @@ export const TeamManagement: React.FC<TeamManagementProps> = ({ onClose, onUpdat
       resetForm();
     } catch (error) {
       console.error('Failed to save team member:', error);
-      alert('Failed to save team member. Please try again.');
+      toast.error('Failed to save team member. Please try again.');
     }
   };
 
@@ -105,11 +111,16 @@ export const TeamManagement: React.FC<TeamManagementProps> = ({ onClose, onUpdat
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div
+      className="fixed inset-0 bg-black/50 flex items-center justify-center"
+      style={{ zIndex: 1000 }}
+    >
       <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <div className="p-6 border-b border-gray-200 flex justify-between items-center">
           <h2 className="text-xl font-bold text-gray-900">Manage Team Members</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">✕</button>
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+            ✕
+          </button>
         </div>
 
         <div className="p-6">
@@ -119,7 +130,14 @@ export const TeamManagement: React.FC<TeamManagementProps> = ({ onClose, onUpdat
                 <p className="text-gray-600">
                   Add team members to assign them to specific success criteria.
                 </p>
-                <Button onClick={() => { resetForm(); setIsAdding(true); }} variant="primary" size="sm">
+                <Button
+                  onClick={() => {
+                    resetForm();
+                    setIsAdding(true);
+                  }}
+                  variant="primary"
+                  size="sm"
+                >
                   + Add Member
                 </Button>
               </div>
@@ -130,10 +148,13 @@ export const TeamManagement: React.FC<TeamManagementProps> = ({ onClose, onUpdat
                 </div>
               ) : (
                 <div className="grid gap-4">
-                  {members.map(member => (
-                    <div key={member.id} className="flex items-center justify-between p-4 bg-white border rounded-lg hover:shadow-sm transition-shadow">
+                  {members.map((member) => (
+                    <div
+                      key={member.id}
+                      className="flex items-center justify-between p-4 bg-white border rounded-lg hover:shadow-sm transition-shadow"
+                    >
                       <div className="flex items-center gap-4">
-                        <div 
+                        <div
                           className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm"
                           style={{ backgroundColor: member.color }}
                         >
@@ -141,12 +162,23 @@ export const TeamManagement: React.FC<TeamManagementProps> = ({ onClose, onUpdat
                         </div>
                         <div>
                           <h3 className="font-medium text-gray-900">{member.name}</h3>
-                          <p className="text-sm text-gray-500">{member.role} {member.email && `• ${member.email}`}</p>
+                          <p className="text-sm text-gray-500">
+                            {member.role} {member.email && `• ${member.email}`}
+                          </p>
                         </div>
                       </div>
                       <div className="flex gap-2">
-                        <Button onClick={() => handleEdit(member)} variant="secondary" size="sm">Edit</Button>
-                        <Button onClick={() => handleDelete(member.id)} variant="secondary" size="sm" className="text-red-600 hover:bg-red-50">Remove</Button>
+                        <Button onClick={() => handleEdit(member)} variant="secondary" size="sm">
+                          Edit
+                        </Button>
+                        <Button
+                          onClick={() => handleDelete(member.id)}
+                          variant="secondary"
+                          size="sm"
+                          className="text-red-600 hover:bg-red-50"
+                        >
+                          Remove
+                        </Button>
                       </div>
                     </div>
                   ))}
@@ -155,8 +187,10 @@ export const TeamManagement: React.FC<TeamManagementProps> = ({ onClose, onUpdat
             </div>
           ) : (
             <div className="space-y-4">
-              <h3 className="text-lg font-medium text-gray-900">{editingId ? 'Edit Member' : 'Add New Member'}</h3>
-              
+              <h3 className="text-lg font-medium text-gray-900">
+                {editingId ? 'Edit Member' : 'Add New Member'}
+              </h3>
+
               <div className="grid grid-cols-2 gap-4">
                 <Input
                   label="Name"
@@ -208,9 +242,14 @@ export const TeamManagement: React.FC<TeamManagementProps> = ({ onClose, onUpdat
               </div>
 
               <div>
-                <span id="avatar-color-label" className="block text-sm font-medium text-gray-700 mb-2">Avatar Color</span>
+                <span
+                  id="avatar-color-label"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  Avatar Color
+                </span>
                 <div className="flex gap-2" role="radiogroup" aria-labelledby="avatar-color-label">
-                  {COLORS.map(c => (
+                  {COLORS.map((c) => (
                     <button
                       key={c}
                       type="button"
@@ -226,7 +265,9 @@ export const TeamManagement: React.FC<TeamManagementProps> = ({ onClose, onUpdat
               </div>
 
               <div className="flex justify-end gap-3 pt-4 border-t mt-6">
-                <Button onClick={resetForm} variant="secondary">Cancel</Button>
+                <Button onClick={resetForm} variant="secondary">
+                  Cancel
+                </Button>
                 <Button onClick={handleSave} variant="primary" disabled={!name || !initials}>
                   {editingId ? 'Save Changes' : 'Add Member'}
                 </Button>

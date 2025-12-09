@@ -284,7 +284,6 @@
   border: 2px solid transparent;
 }
 
-
 .step-number {
   flex-shrink: 0;
   width: 3rem;
@@ -343,7 +342,7 @@
 }
 
 .getting-started-features li:before {
-  content: "✓";
+  content: '✓';
   position: absolute;
   left: 0;
   color: var(--color-success);
@@ -470,5 +469,3 @@
     margin-bottom: var(--spacing-md);
   }
 }
-
-

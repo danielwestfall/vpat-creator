@@ -1,0 +1,35 @@
+﻿
+> vpat-creator@0.0.0 validate
+> npm run type-check && npm run lint && npm run format:check
+
+
+> vpat-creator@0.0.0 type-check
+> tsc --noEmit
+
+
+> vpat-creator@0.0.0 lint
+> eslint .
+
+
+C:\Users\clean\Desktop\VPAT_Creation\vpat-creator\src\components\settings\TeamManagement.tsx
+  224:54  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\clean\Desktop\VPAT_Creation\vpat-creator\src\components\templates\TemplateEditor.tsx
+  309:74  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  344:74  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\clean\Desktop\VPAT_Creation\vpat-creator\src\pages\RoadmapPage.tsx
+  30:33  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  70:87  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\clean\Desktop\VPAT_Creation\vpat-creator\src\pages\StyleGuidePage.tsx
+  70:87  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  85:85  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+Γ£û 7 problems (0 errors, 7 warnings)
+
+
+> vpat-creator@0.0.0 format:check
+> prettier --check "src/**/*.{ts,tsx,json,css,md}"
+
+Checking formatting...

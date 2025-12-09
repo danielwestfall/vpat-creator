@@ -1,0 +1,13 @@
+﻿
+ RUN  v4.0.10 C:/Users/clean/Desktop/VPAT_Creation/vpat-creator
+
+ Γ¥» src/tests/user-workflows.test.tsx (3 tests | 1 failed | 2 skipped) 1837ms
+     ├ù Auditor (Alice) performs a full audit workflow 1833ms
+     Γåô Developer (Bob) fixes a bug and updates result
+     Γåô Manager (Charlie) exports results
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 2 skipped (3)
+   Start at  20:14:07
+   Duration  10.31s (transform 2.32s, setup 1.23s, collect 4.52s, tests 1.84s, environment 2.30s, prepare 45ms)
+

@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { Button } from '../common';
-import { externalImportService, type ExternalImportResult } from '../../services/external-import-service';
+import {
+  externalImportService,
+  type ExternalImportResult,
+} from '../../services/external-import-service';
 import type { MappedResult } from '../../services/axe-service';
 import './ExternalImportDialog.css';
 
@@ -25,7 +28,7 @@ export function ExternalImportDialog({ onClose, onImport }: ExternalImportDialog
       console.error('Import failed:', error);
       setImportResult({
         success: false,
-        errors: ['Unexpected error during import']
+        errors: ['Unexpected error during import'],
       });
     } finally {
       setIsLoading(false);
@@ -41,8 +44,8 @@ export function ExternalImportDialog({ onClose, onImport }: ExternalImportDialog
 
   return (
     <div className="external-import-dialog">
-      <div 
-        className="external-import-dialog__overlay" 
+      <div
+        className="external-import-dialog__overlay"
         onClick={onClose}
         role="button"
         tabIndex={0}
@@ -124,8 +127,8 @@ export function ExternalImportDialog({ onClose, onImport }: ExternalImportDialog
               )}
 
               <p style={{ fontSize: '0.875rem', color: '#64748b', marginTop: '1rem' }}>
-                Importing will map these automated results to the corresponding WCAG Success Criteria.
-                Violations will be marked as "Does Not Support" with details in the notes.
+                Importing will map these automated results to the corresponding WCAG Success
+                Criteria. Violations will be marked as "Does Not Support" with details in the notes.
               </p>
             </>
           )}

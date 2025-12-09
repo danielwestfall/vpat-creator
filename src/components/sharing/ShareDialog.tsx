@@ -33,9 +33,9 @@ export function ShareDialog({ project, results, teamMembers, onClose }: ShareDia
       setIsSharing(true);
       const recipientList = recipients
         .split(',')
-        .map(r => r.trim())
-        .filter(r => r.length > 0);
-      
+        .map((r) => r.trim())
+        .filter((r) => r.length > 0);
+
       await shareViaEmail(payload, recipientList, message);
       toast.success('Email client opened! JSON file downloaded.');
       onClose();
@@ -83,8 +83,8 @@ export function ShareDialog({ project, results, teamMembers, onClose }: ShareDia
 
   return (
     <div className="share-dialog">
-      <div 
-        className="share-dialog__overlay" 
+      <div
+        className="share-dialog__overlay"
         onClick={onClose}
         onKeyDown={(e) => e.key === 'Escape' && onClose()}
         role="button"
@@ -92,7 +92,12 @@ export function ShareDialog({ project, results, teamMembers, onClose }: ShareDia
         aria-label="Close dialog"
       />
 
-      <div className="share-dialog__content" role="dialog" aria-modal="true" aria-labelledby="share-dialog-title">
+      <div
+        className="share-dialog__content"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="share-dialog-title"
+      >
         <div className="share-dialog__header">
           <h2 id="share-dialog-title" className="share-dialog__title">
             📤 Share Audit
@@ -152,7 +157,9 @@ export function ShareDialog({ project, results, teamMembers, onClose }: ShareDia
                 <div className="share-option__icon">📧</div>
                 <div>
                   <h4 className="share-option__name">Share via Email</h4>
-                  <p className="share-option__description">Opens your email client with audit details</p>
+                  <p className="share-option__description">
+                    Opens your email client with audit details
+                  </p>
                 </div>
               </div>
             </div>
@@ -171,7 +178,13 @@ export function ShareDialog({ project, results, teamMembers, onClose }: ShareDia
                 placeholder="Please review the assigned test criteria..."
                 fullWidth
               />
-              <Button onClick={handleEmailShare} disabled={isSharing} variant="primary" size="sm" fullWidth>
+              <Button
+                onClick={handleEmailShare}
+                disabled={isSharing}
+                variant="primary"
+                size="sm"
+                fullWidth
+              >
                 Open Email Client
               </Button>
             </div>
@@ -182,7 +195,9 @@ export function ShareDialog({ project, results, teamMembers, onClose }: ShareDia
                 <div className="share-option__icon">📋</div>
                 <div>
                   <h4 className="share-option__name">Copy to Clipboard</h4>
-                  <p className="share-option__description">Copy JSON data to paste in chat or document</p>
+                  <p className="share-option__description">
+                    Copy JSON data to paste in chat or document
+                  </p>
                 </div>
               </div>
               <Button onClick={handleCopyToClipboard} variant="secondary" size="sm">

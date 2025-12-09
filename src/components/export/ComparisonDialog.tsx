@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { toast } from '../../store/toast-store';
 import { Button } from '../common';
 import type { Project, TestResult } from '../../models/types';
 import { comparisonService, type ComparisonSummary } from '../../services/comparison-service';
@@ -11,7 +12,11 @@ interface ComparisonDialogProps {
   onClose: () => void;
 }
 
-export function ComparisonDialog({ currentProject, currentResults, onClose }: ComparisonDialogProps) {
+export function ComparisonDialog({
+  currentProject,
+  currentResults,
+  onClose,
+}: ComparisonDialogProps) {
   const [comparison, setComparison] = useState<ComparisonSummary | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -24,10 +29,10 @@ export function ComparisonDialog({ currentProject, currentResults, onClose }: Co
     reader.onload = (e) => {
       try {
         const importedData = JSON.parse(e.target?.result as string);
-        
+
         // Validate structure
         if (!importedData.auditScope || !importedData.wcagResults) {
-          alert('Invalid VPAT file format.');
+          toast.error('Invalid VPAT file format.');
           setIsLoading(false);
           return;
         }
@@ -36,7 +41,7 @@ export function ComparisonDialog({ currentProject, currentResults, onClose }: Co
         // Note: The imported JSON structure is slightly different from internal Project model
         // We need to map it back or adjust the service.
         // The service expects Project and TestResult[].
-        
+
         // Let's reconstruct a minimal Project object for the previous audit
         const prevProject: Project = {
           id: 'imported-prev',
@@ -46,29 +51,46 @@ export function ComparisonDialog({ currentProject, currentResults, onClose }: Co
           status: 'completed',
           createdAt: new Date(importedData.testDate),
           modifiedAt: new Date(importedData.testDate),
-          testingEnvironment: { browsers: [], assistiveTech: [], operatingSystems: [], devices: [] },
-          vpatConfig: { tone: 'formal', customColumns: [], additionalPages: [], styleGuide: {}, includeExecutiveSummary: true, includeRoadmap: false, productName: '', productVersion: '', reportDate: new Date() },
+          testingEnvironment: {
+            browsers: [],
+            assistiveTech: [],
+            operatingSystems: [],
+            devices: [],
+          },
+          vpatConfig: {
+            tone: 'formal',
+            customColumns: [],
+            additionalPages: [],
+            styleGuide: {},
+            includeExecutiveSummary: true,
+            includeRoadmap: false,
+            productName: '',
+            productVersion: '',
+            reportDate: new Date(),
+          },
           components: [],
-          testingMode: 'by-criterion'
+          testingMode: 'by-criterion',
         };
 
         // Reconstruct TestResults
-        const prevResults: TestResult[] = importedData.wcagResults.map((r: { scNumber: string; scLevel: 'A' | 'AA' | 'AAA'; status: string; notes: string }) => {
-          // Map SC Number to internal ID
-          const sc = wcagService.getSuccessCriterionByNumber(r.scNumber);
-          const scId = sc ? sc.id : r.scNumber; // Fallback to number if not found (though comparison might fail)
+        const prevResults: TestResult[] = importedData.wcagResults.map(
+          (r: { scNumber: string; scLevel: 'A' | 'AA' | 'AAA'; status: string; notes: string }) => {
+            // Map SC Number to internal ID
+            const sc = wcagService.getSuccessCriterionByNumber(r.scNumber);
+            const scId = sc ? sc.id : r.scNumber; // Fallback to number if not found (though comparison might fail)
 
-          return {
-            id: scId,
-            successCriterionId: scId,
-            level: r.scLevel,
-            conformance: r.status,
-            observations: r.notes,
-            barriers: [],
-            testingMethod: { type: 'Manual', tools: [] },
-            customNotes: r.notes
-          } as TestResult;
-        });
+            return {
+              id: scId,
+              successCriterionId: scId,
+              level: r.scLevel,
+              conformance: r.status,
+              observations: r.notes,
+              barriers: [],
+              testingMethod: { type: 'Manual', tools: [] },
+              customNotes: r.notes,
+            } as TestResult;
+          }
+        );
 
         // Run comparison
         const result = comparisonService.compareAudits(
@@ -77,11 +99,11 @@ export function ComparisonDialog({ currentProject, currentResults, onClose }: Co
           currentProject, // Target (New)
           currentResults
         );
-        
+
         setComparison(result);
       } catch (error) {
         console.error(error);
-        alert('Failed to parse comparison file.');
+        toast.error('Failed to parse comparison file.');
       } finally {
         setIsLoading(false);
       }
@@ -95,8 +117,8 @@ export function ComparisonDialog({ currentProject, currentResults, onClose }: Co
 
   return (
     <div className="comparison-dialog">
-      <div 
-        className="comparison-dialog__overlay" 
+      <div
+        className="comparison-dialog__overlay"
         onClick={onClose}
         role="button"
         tabIndex={0}
@@ -118,7 +140,10 @@ export function ComparisonDialog({ currentProject, currentResults, onClose }: Co
               <label htmlFor="compare-upload" style={{ cursor: 'pointer', display: 'block' }}>
                 <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📂</div>
                 <h3>Upload Previous Audit</h3>
-                <p style={{ color: '#64748b' }}>Select a JSON file exported from VPAT Creator to compare with your current progress.</p>
+                <p style={{ color: '#64748b' }}>
+                  Select a JSON file exported from VPAT Creator to compare with your current
+                  progress.
+                </p>
                 <Button variant="primary" style={{ marginTop: '1rem', pointerEvents: 'none' }}>
                   Select File
                 </Button>

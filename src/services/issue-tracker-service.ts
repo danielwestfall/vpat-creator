@@ -35,6 +35,12 @@ export interface TrackerIssueResult {
   key?: string; // e.g., ISSUE-123
 }
 
+export interface AsanaResource {
+  gid: string;
+  name: string;
+  resource_type: string;
+}
+
 class IssueTrackerService {
   private config: IssueTrackerConfig;
 
@@ -90,19 +96,22 @@ class IssueTrackerService {
     }
 
     try {
-      const response = await fetch(`https://api.github.com/repos/${githubOwner}/${githubRepo}/issues`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `token ${githubToken}`,
-          'Accept': 'application/vnd.github.v3+json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          title: issue.title,
-          body: issue.description,
-          labels: issue.labels || ['accessibility', 'vpat-audit'],
-        }),
-      });
+      const response = await fetch(
+        `https://api.github.com/repos/${githubOwner}/${githubRepo}/issues`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `token ${githubToken}`,
+            Accept: 'application/vnd.github.v3+json',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            title: issue.title,
+            body: issue.description,
+            labels: issue.labels || ['accessibility', 'vpat-audit'],
+          }),
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -132,7 +141,7 @@ class IssueTrackerService {
       const response = await fetch('https://app.asana.com/api/1.0/tasks', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${asanaToken}`,
+          Authorization: `Bearer ${asanaToken}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -176,9 +185,9 @@ class IssueTrackerService {
       const response = await fetch(`https://${domain}/rest/api/3/issue`, {
         method: 'POST',
         headers: {
-          'Authorization': `Basic ${auth}`,
+          Authorization: `Basic ${auth}`,
           'Content-Type': 'application/json',
-          'Accept': 'application/json',
+          Accept: 'application/json',
         },
         body: JSON.stringify({
           fields: {
@@ -211,7 +220,8 @@ class IssueTrackerService {
 
       if (!response.ok) {
         const errorData = await response.json();
-        const errorMessages = errorData.errorMessages?.join(', ') || JSON.stringify(errorData.errors);
+        const errorMessages =
+          errorData.errorMessages?.join(', ') || JSON.stringify(errorData.errors);
         throw new Error(errorMessages || 'Failed to create Jira issue');
       }
 
@@ -228,26 +238,30 @@ class IssueTrackerService {
   }
 
   // Helper to validate GitHub connection
-  public async validateGitHubConnection(token: string, owner: string, repo: string): Promise<boolean> {
+  public async validateGitHubConnection(
+    token: string,
+    owner: string,
+    repo: string
+  ): Promise<boolean> {
     try {
       const response = await fetch(`https://api.github.com/repos/${owner}/${repo}`, {
         headers: {
-          'Authorization': `token ${token}`,
-          'Accept': 'application/vnd.github.v3+json',
+          Authorization: `token ${token}`,
+          Accept: 'application/vnd.github.v3+json',
         },
       });
       return response.ok;
-    } catch (error) {
+    } catch {
       return false;
     }
   }
 
   // Helper to get Asana Workspaces (to help user select)
-  public async getAsanaWorkspaces(token: string): Promise<any[]> {
+  public async getAsanaWorkspaces(token: string): Promise<AsanaResource[]> {
     try {
       const response = await fetch('https://app.asana.com/api/1.0/workspaces', {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
       });
       if (!response.ok) throw new Error('Failed to fetch workspaces');
@@ -260,16 +274,16 @@ class IssueTrackerService {
   }
 
   // Helper to get Asana Projects (to help user select)
-  public async getAsanaProjects(token: string, workspaceId?: string): Promise<any[]> {
+  public async getAsanaProjects(token: string, workspaceId?: string): Promise<AsanaResource[]> {
     try {
       let url = 'https://app.asana.com/api/1.0/projects';
       if (workspaceId) {
         url += `?workspace=${workspaceId}`;
       }
-      
+
       const response = await fetch(url, {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
       });
       if (!response.ok) throw new Error('Failed to fetch projects');
@@ -281,7 +295,12 @@ class IssueTrackerService {
     }
   }
   // Helper to validate Jira connection
-  public async validateJiraConnection(domain: string, email: string, token: string, projectKey: string): Promise<boolean> {
+  public async validateJiraConnection(
+    domain: string,
+    email: string,
+    token: string,
+    projectKey: string
+  ): Promise<boolean> {
     const cleanDomain = domain.replace(/^https?:\/\//, '').replace(/\/$/, '');
     const auth = btoa(`${email}:${token}`);
 
@@ -289,12 +308,12 @@ class IssueTrackerService {
       // Try to fetch project details to validate credentials and project key
       const response = await fetch(`https://${cleanDomain}/rest/api/3/project/${projectKey}`, {
         headers: {
-          'Authorization': `Basic ${auth}`,
-          'Accept': 'application/json',
+          Authorization: `Basic ${auth}`,
+          Accept: 'application/json',
         },
       });
       return response.ok;
-    } catch (error) {
+    } catch {
       return false;
     }
   }

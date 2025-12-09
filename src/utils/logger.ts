@@ -1,6 +1,6 @@
 /**
  * Development Logger Utility
- * 
+ *
  * Provides logging functionality that only runs in development mode.
  * In production builds, all log statements are no-ops.
  */
